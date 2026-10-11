@@ -17,6 +17,8 @@ import type { PoiSelection } from './pois';
 import { AnimationScheduler } from './animation';
 import { atmosphereUniforms } from './atmosphere';
 import { SolarLighting } from './lighting';
+import { TerrainStore, sampleElevation, tileElevation } from './terrain';
+import type { TerrainManifest, TerrainOverview } from './terrain';
 import { TimeControls, timePanel } from './time-controls';
 import './style.css';
 
@@ -46,12 +48,13 @@ export function mount(container: HTMLElement): Cleanup {
         </div>
         <a class="nantes-attribution" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">© OpenStreetMap contributors · ODbL</a>
       </div>
+      <p class="nantes-terrain-source">Relief IGN RGE ALTI · NGF-IGN69 · échelle verticale 1:1 · <a href="https://geoservices.ign.fr/rgealti" target="_blank" rel="noopener noreferrer">Source</a> · <a href="https://www.etalab.gouv.fr/licence-ouverte-open-licence/" target="_blank" rel="noopener noreferrer">Licence ouverte</a></p>
       <p class="controls-help" id="nantes-help">Glisser pour tourner · Molette pour zoomer · Clic droit ou deux doigts pour déplacer · Clavier : flèches, +, −, R pour réinitialiser et N pour le nord</p>
       <div class="nantes-place" hidden><span><strong class="nantes-place-name"></strong><a class="nantes-place-link" target="_blank" rel="noopener noreferrer">Voir sur OpenStreetMap ↗</a></span><button type="button" data-action="clear-poi" aria-label="Masquer le repère du lieu" title="Masquer le repère">×</button></div>
       <span class="nantes-sr-only nantes-announcement" role="status"></span>
       <div class="nantes-caption"><span><strong>Nantes · Loire & Erdre</strong><br>Empreintes réelles, architecture interprétée</span><span class="nantes-stats" role="status"></span></div>
       <details class="nantes-diagnostics"><summary>Diagnostic du rendu</summary><output></output></details>
-      <details class="nantes-data"><summary>À propos de cette maquette</summary><p class="nantes-provenance"></p><p>Les empreintes, rues, places, espaces verts et arbres proviennent d’OpenStreetMap. Les hauteurs et toitures utilisent les attributs disponibles ; les autres dimensions, fenêtres, matériaux et détails de façade sont estimés de manière déterministe. Le relief est plat et les formes de toit sont approximatives. La vue générale agrège la densité bâtie ; les empreintes réelles apparaissent en zoomant.</p><p><a href="https://www.openstreetmap.org/#map=16/47.2156/-1.5524" target="_blank" rel="noopener noreferrer">Voir Nantes sur OpenStreetMap ↗</a> · <a href="https://opendatacommons.org/licenses/odbl/1-0/" target="_blank" rel="noopener noreferrer">Licence des données ODbL ↗</a></p></details>
+      <details class="nantes-data"><summary>À propos de cette maquette</summary><p class="nantes-provenance"></p><p>Les empreintes, rues, places, espaces verts et arbres proviennent d’OpenStreetMap. Les hauteurs et toitures utilisent les attributs disponibles ; les autres dimensions, fenêtres, matériaux et détails de façade sont estimés de manière déterministe. Le relief provient du MNT IGN RGE ALTI ; les formes de toit restent approximatives. La vue générale agrège la densité bâtie ; les empreintes réelles apparaissent en zoomant.</p><p><a href="https://www.openstreetmap.org/#map=16/47.2156/-1.5524" target="_blank" rel="noopener noreferrer">Voir Nantes sur OpenStreetMap ↗</a> · <a href="https://opendatacommons.org/licenses/odbl/1-0/" target="_blank" rel="noopener noreferrer">Licence des données ODbL ↗</a></p></details>
     </section>`;
   const viewport = container.querySelector<HTMLElement>('.viewport')!;
   const status = container.querySelector<HTMLElement>('.nantes-loading')!;
@@ -105,6 +108,9 @@ export function mount(container: HTMLElement): Cleanup {
   let disposed = false;
   let manifest: CityManifest | undefined;
   let overview: ReturnType<typeof createOverview> | undefined;
+  let terrainOverview: TerrainOverview | undefined;
+  let terrainStore: TerrainStore | undefined;
+  const terrainFiles = new Map<string, string>();
   let loader: TileLoader<CityModel & TileResource> | undefined;
   let destination: Vector3 | undefined;
   let tileTimer: number | undefined;
@@ -127,16 +133,29 @@ export function mount(container: HTMLElement): Cleanup {
   let compassHeading = 0;
   let previousHeading = 0;
   const markerProjection = new Vector3();
+  const elevationAt = (x: number, z: number): number => {
+    if (!terrainOverview) return 0;
+    const fine = terrainStore?.peek(`${Math.floor(x / 500)}_${Math.floor(z / 500)}`);
+    return fine ? tileElevation(fine, x, z) : sampleElevation(terrainOverview.grid, x, z);
+  };
+  const fitCamera = (): void => {
+    if (!terrainOverview) return;
+    const delta = elevationAt(controls.target.x, controls.target.z) - controls.target.y;
+    controls.target.y += delta; camera.position.y += delta;
+    camera.position.y = Math.max(camera.position.y, elevationAt(camera.position.x, camera.position.z) + 3);
+    camera.lookAt(controls.target);
+  };
   const refreshDiagnostics = (): void => {
     if (diagnostics.open && loader) {
       const info = loader.info;
-      diagnostics.querySelector('output')!.textContent = `${navigator.active || timeControls.playing || waterActive() ? `Rendu animé : ${movementFps.toFixed(1)} images/s` : 'Au repos : rendu à la demande'} · ${info.active} tuiles · ${info.pending} requêtes · LOD proche/moyen/lointain : ${info.lod.near}/${info.lod.medium}/${info.lod.far} · ${renderer.info.render.calls} appels de dessin · ${renderer.info.render.triangles.toLocaleString('fr-FR')} triangles · buffers estimés : ${(info.bytes / 1048576).toFixed(1)} Mio (hors pilote GPU)`;
+      diagnostics.querySelector('output')!.textContent = `${navigator.active || timeControls.playing || waterActive() ? `Rendu animé : ${movementFps.toFixed(1)} images/s` : 'Au repos : rendu à la demande'} · ${info.active} tuiles · ${info.pending} requêtes · LOD proche/moyen/lointain : ${info.lod.near}/${info.lod.medium}/${info.lod.far} · ${renderer.info.render.calls} appels de dessin · ${renderer.info.render.triangles.toLocaleString('fr-FR')} triangles · relief 20/50/100 m · buffers estimés : ${(info.bytes / 1048576).toFixed(1)} Mio (hors pilote GPU)`;
     }
   };
   const requestDraw = (): void => scheduler.invalidate();
   const render = (): void => {
     if (disposed) return;
     sceneDirty = false;
+    fitCamera();
     const heading = controls.getAzimuthalAngle();
     // Dérouler les angles évite un tour artificiel lors du passage de +π à −π.
     compassHeading += shortestAngle(previousHeading, heading);
@@ -153,6 +172,7 @@ export function mount(container: HTMLElement): Cleanup {
       refreshDiagnostics();
     }
     if (selection) {
+      selection.marker.y = elevationAt(selection.marker.x, selection.marker.z) + selection.point.markerHeight;
       markerProjection.copy(selection.marker).project(camera);
       const visible = markerProjection.z >= -1 && markerProjection.z <= 1 && Math.abs(markerProjection.x) <= 1 && Math.abs(markerProjection.y) <= 1;
       marker.hidden = !visible;
@@ -181,7 +201,7 @@ export function mount(container: HTMLElement): Cleanup {
     controls.target.copy(pose.target);
     camera.position.copy(cameraPosition(pose));
     // L’événement change assure le rendu ; aucune seconde frame pour le même pas.
-    controls.update();
+    fitCamera(); controls.update();
   };
   const navigator = new CameraNavigator(readPose, applyPose, scheduler);
   const aspect = (): number => viewport.clientWidth / Math.max(1, viewport.clientHeight);
@@ -203,7 +223,7 @@ export function mount(container: HTMLElement): Cleanup {
   };
   const selectPoi = (id: string): void => {
     if (!manifest) return;
-    const next = selectPointOfInterest(id, manifest.meta, readPose(), aspect());
+    const next = selectPointOfInterest(id, manifest.meta, readPose(), aspect(), elevationAt);
     if (!next) return;
     selection = next;
     destination = next.pose.target.clone();
@@ -273,7 +293,7 @@ export function mount(container: HTMLElement): Cleanup {
   picker.addEventListener('change', selectChange);
   viewport.addEventListener('keydown', keydown);
   controls.addEventListener('start', manualInteraction);
-  const cameraChanged = (): void => { updateAnimation(); requestDraw(); scheduleTiles(); };
+  const cameraChanged = (): void => { fitCamera(); updateAnimation(); requestDraw(); scheduleTiles(); };
   const diagnosticChanged = (): void => { lastDraw = 0; requestDraw(); };
   diagnostics.addEventListener('toggle', diagnosticChanged);
   controls.addEventListener('change', cameraChanged);
@@ -309,17 +329,30 @@ export function mount(container: HTMLElement): Cleanup {
       if (disposed) return;
       manifest = data;
       status.textContent = 'Préparation de la vue générale de Nantes…';
-      const general = await fetchData<CityData>(base + data.overview, request.signal);
+      const [general, reliefManifest] = await Promise.all([
+        fetchData<CityData>(base + data.overview, request.signal),
+        fetchData<TerrainManifest>(base + 'terrain/manifest.json', request.signal),
+      ]);
+      for (const entry of reliefManifest.tiles) terrainFiles.set(entry.id, 'terrain/' + entry.url);
+      if (data.tiles.some((tile) => !terrainFiles.has(tile.id))) throw new Error('Une tuile IGN nécessaire est absente');
+      terrainOverview = await fetchData<TerrainOverview>(base + 'terrain/' + reliefManifest.overview, request.signal);
       if (disposed) return;
-      overview = createOverview(general, data, atmosphere);
+      overview = createOverview(general, data, atmosphere, terrainOverview);
       scene.add(overview.group);
+      terrainStore = new TerrainStore((url, signal) => fetchData(base + url, signal));
       loader = new TileLoader({
-        fetch: (choice, signal) => fetchData<CityData>(base + choice.tile.urls[choice.lod], signal),
+        fetch: async (choice, signal) => {
+          const [city, terrain] = await Promise.all([
+            fetchData<CityData>(base + choice.tile.urls[choice.lod], signal),
+            terrainStore!.load(choice.tile.id, terrainFiles.get(choice.tile.id)!, signal),
+          ]);
+          return { ...city, terrain };
+        },
         generate: async (tileData, choice, signal) => {
           // Laisser le navigateur traiter les interactions entre deux lots de géométrie.
           await new Promise<void>((resolve) => window.setTimeout(resolve, 0));
           if (signal.aborted || disposed) throw new DOMException('Chargement annulé', 'AbortError');
-          const model = createCity(tileData, { lod: choice.lod, ground: false, atmosphere });
+          const model = createCity(tileData, { lod: choice.lod, ground: false, atmosphere, terrain: tileData.terrain, elevation: (x, z) => sampleElevation(terrainOverview!.grid, x, z), waterLevels: terrainOverview!.waterLevels, bridgeLevels: terrainOverview!.bridgeLevels });
           let bytes = 0;
           const geometries = new Set<BufferGeometry>();
           model.group.traverse((object) => {
@@ -348,7 +381,7 @@ export function mount(container: HTMLElement): Cleanup {
       picker.disabled = false;
       container.querySelectorAll<HTMLButtonElement>('[data-view]').forEach((button) => { button.disabled = false; });
       stats.textContent = `${data.counts.buildings!.toLocaleString('fr-FR')} empreintes · ${data.tiles.length} tuiles · ${(data.areaSquareMetres / 1e6).toFixed(1)} km²`;
-      container.querySelector<HTMLElement>('.nantes-provenance')!.textContent = `Données OpenStreetMap / Geofabrik du ${new Date(data.meta.extractedAt).toLocaleDateString('fr-FR', { timeZone: 'Europe/Paris' })}. Limite communale officielle : Nantes, INSEE 44109 (API Découpage administratif). Le modèle n’est pas un relevé architectural.`;
+      container.querySelector<HTMLElement>('.nantes-provenance')!.textContent = `Données OpenStreetMap / Geofabrik du ${new Date(data.meta.extractedAt).toLocaleDateString('fr-FR', { timeZone: 'Europe/Paris' })}. Limite communale officielle : Nantes, INSEE 44109 (API Découpage administratif). Relief IGN RGE ALTI 5 m, édition ${reliefManifest.meta.edition}, altitudes NGF-IGN69 (${reliefManifest.range[0]} à ${reliefManifest.range[1]} m). Le modèle n’est pas un relevé architectural.`;
       applyPose(cityOverviewPose(data.bounds, aspect()));
       status.hidden = true;
       updateAnimation(); updateTiles(); requestDraw();
@@ -374,7 +407,7 @@ export function mount(container: HTMLElement): Cleanup {
     diagnostics.removeEventListener('toggle', diagnosticChanged);
     if (tileTimer !== undefined) window.clearTimeout(tileTimer);
     controls.dispose();
-    loader?.dispose();
+    loader?.dispose(); terrainStore?.dispose();
     overview?.dispose();
     sun.shadow.dispose();
     scene.clear();

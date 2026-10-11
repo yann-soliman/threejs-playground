@@ -1,15 +1,19 @@
 import { DataTexture, NearestFilter, RedFormat, Mesh, MeshStandardMaterial, ShapeGeometry, Group, BufferGeometry, Float32BufferAttribute, LineLoop, LineBasicMaterial } from 'three';
 import { footprintShape } from './buildings';
+import { meshElevation, sampleElevation, terrainMesh } from './terrain';
+import type { TerrainOverview } from './terrain';
 import type { AtmosphereUniforms } from './atmosphere';
 import { createCity } from './city';
 import type { CityData } from './types';
 import type { CityManifest, TileEntry } from './tiles';
 
 /** Masque commun des tuiles remplacées : la vue générale ne double pas leurs objets. */
-export function createOverview(data: CityData, manifest: CityManifest, atmosphere?: AtmosphereUniforms): {
+export function createOverview(data: CityData, manifest: CityManifest, atmosphere?: AtmosphereUniforms, terrain?: TerrainOverview): {
   group: Group; setTile: (tile: TileEntry, active: boolean) => void; dispose: () => void;
 } {
-  const model = createCity(data, { lod: 'far', ground: false, atmosphere });
+  const model = createCity(data, { lod: 'far', ground: false, atmosphere, elevation: terrain ? (x, z) => sampleElevation(terrain.grid, x, z) : undefined, waterLevels: terrain?.waterLevels, bridgeLevels: terrain?.bridgeLevels, waterSurfaces: terrain?.waterSurfaces, surfaceRings: terrain?.surfaceRings, groundElevation: terrain ? meshElevation(terrain.vertices, terrain.indices, (x, z) => sampleElevation(terrain.grid, x, z)) : undefined });
+  const relief = terrain ? terrainMesh(terrain.vertices, terrain.indices, (x, z) => sampleElevation(terrain.grid, x, z)) : undefined;
+  if (relief) model.group.add(relief);
   const minX = Math.floor(manifest.bounds[0]! / manifest.tileSize);
   const minZ = Math.floor(manifest.bounds[1]! / manifest.tileSize);
   const width = Math.ceil(manifest.bounds[2]! / manifest.tileSize) - minX;
@@ -35,19 +39,19 @@ export function createOverview(data: CityData, manifest: CityManifest, atmospher
   });
   const group = new Group();
   const groundMaterial = new MeshStandardMaterial({ color: '#d4d2c4', roughness: 1 });
-  const grounds = manifest.boundary.map((rings) => {
+  const grounds = (terrain ? [] : manifest.boundary).map((rings) => {
     const geometry = new ShapeGeometry(footprintShape(rings)); geometry.rotateX(-Math.PI / 2);
     const ground = new Mesh(geometry, groundMaterial); ground.receiveShadow = true; group.add(ground); return geometry;
   });
   const outlineMaterial = new LineBasicMaterial({ color: '#9ca892' });
   const outlines = manifest.boundary.flatMap((rings) => rings.map((ring) => {
     const geometry = new BufferGeometry();
-    geometry.setAttribute('position', new Float32BufferAttribute(ring.flatMap(([x, z]) => [x, .025, z]), 3));
+    geometry.setAttribute('position', new Float32BufferAttribute(ring.flatMap(([x, z]) => [x, (terrain ? sampleElevation(terrain.grid, x, z) : 0) + .025, z]), 3));
     group.add(new LineLoop(geometry, outlineMaterial)); return geometry;
   }));
   group.add(model.group);
   return { group,
     setTile: (tile, active) => { pixels[(tile.z - minZ) * width + tile.x - minX] = active ? 255 : 0; mask.needsUpdate = true; },
-    dispose: () => { model.dispose(); grounds.forEach((g) => g.dispose()); groundMaterial.dispose(); outlines.forEach((g) => g.dispose()); outlineMaterial.dispose(); mask.dispose(); group.clear(); },
+    dispose: () => { model.dispose(); relief?.geometry.dispose(); (relief?.material as MeshStandardMaterial | undefined)?.dispose(); grounds.forEach((g) => g.dispose()); groundMaterial.dispose(); outlines.forEach((g) => g.dispose()); outlineMaterial.dispose(); mask.dispose(); group.clear(); },
   };
 }

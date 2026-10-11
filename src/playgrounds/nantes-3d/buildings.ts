@@ -173,3 +173,14 @@ export function buildingRoof(feature: Feature, style: BuildingStyle): BufferGeom
 export function signedArea(ring: Point[]): number {
   return ring.reduce((sum, a, i) => { const b = ring[(i + 1) % ring.length]!; return sum + a[0] * b[1] - b[0] * a[1]; }, 0) / 2;
 }
+
+
+/** Socle vertical distinct : le bâtiment garde son niveau horizontal et sa hauteur. */
+export function buildingFoundation(feature: Feature, minimum: number, level: number, color: Color): BufferGeometry {
+  const bottom = minimum - .15;
+  const geometry = new ExtrudeGeometry(footprintShape(feature.rings), {
+    depth: Math.max(.01, level + .16 - bottom), bevelEnabled: false, steps: 1,
+  });
+  geometry.rotateX(-Math.PI / 2); geometry.translate(0, bottom, 0);
+  return paint(geometry, color);
+}

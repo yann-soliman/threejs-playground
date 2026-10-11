@@ -55,13 +55,15 @@ export interface PoiSelection {
   url: string;
 }
 
-export function selectPointOfInterest(id: string, meta: CityData['meta'], current: CameraPose, aspect: number): PoiSelection | undefined {
+export function selectPointOfInterest(id: string, meta: CityData['meta'], current: CameraPose, aspect: number, elevation?: (x: number, z: number) => number): PoiSelection | undefined {
   const point = pointsOfInterest.find((poi) => poi.id === id);
   if (!point) return undefined;
   const [south, west, north, east] = meta.bbox;
   const [latitude, longitude] = point.coordinates;
   if (latitude < south! || latitude > north! || longitude < west! || longitude > east!) return undefined;
   const marker = projectCoordinates(point.coordinates, meta.origin);
-  marker.y = point.markerHeight;
-  return { point, pose: poiPose(point, meta.origin, current, aspect), marker, url: osmLocation(point) };
+  const pose = poiPose(point, meta.origin, current, aspect);
+  const height = elevation?.(marker.x, marker.z) ?? 0;
+  marker.y = height + point.markerHeight; pose.target.y = height;
+  return { point, pose, marker, url: osmLocation(point) };
 }

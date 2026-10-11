@@ -4,9 +4,11 @@ import {
   PlaneGeometry, ShapeGeometry,
 } from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { buildingBody, buildingRoof, buildingStyle, footprintShape, metres, paint, seedOf, signedArea } from './buildings';
+import { buildingBody, buildingFoundation, buildingRoof, buildingStyle, footprintShape, metres, paint, seedOf, signedArea } from './buildings';
 import { atmosphereUniforms, waterMaterial, windowIllumination, windowMaterial } from './atmosphere';
 import type { AtmosphereUniforms } from './atmosphere';
+import { meshElevation, sampleLine, subdivideSurface, terrainGeometry, tileElevation } from './terrain';
+import type { TerrainTile } from './terrain';
 import type { CityData, Point } from './types';
 
 export interface CityModel {
@@ -27,7 +29,7 @@ export function roadWidth(tags: Record<string, string>): number {
   return 5.5;
 }
 
-function ribbon(points: Point[], width: number, elevation: number): BufferGeometry {
+function ribbon(points: Point[], width: number, elevation: number, sample: (x: number, z: number) => number = () => 0): BufferGeometry {
   // Jonctions continues à onglet borné : les segments ne se réduisent pas à des boîtes.
   const edges = points.map((p, i) => {
     const prev = points[Math.max(0, i - 1)]!, next = points[Math.min(points.length - 1, i + 1)]!;
@@ -37,7 +39,7 @@ function ribbon(points: Point[], width: number, elevation: number): BufferGeomet
   const positions: number[] = [];
   for (let i = 1; i < edges.length; i++) {
     const [a, b] = edges[i - 1]!, [c, d] = edges[i]!;
-    for (const p of [a, c, b, b, c, d]) positions.push(p[0], elevation, p[1]);
+    for (const p of [a, c, b, b, c, d]) positions.push(p[0], elevation + sample(p[0], p[1]), p[1]);
   }
   const geometry = new BufferGeometry();
   geometry.setAttribute('position', new Float32BufferAttribute(positions, 3));
@@ -47,10 +49,14 @@ function ribbon(points: Point[], width: number, elevation: number): BufferGeomet
 
 export type DetailLevel = 'near' | 'medium' | 'far';
 
-export function createCity(data: CityData, options: { lod?: DetailLevel; ground?: boolean; atmosphere?: AtmosphereUniforms } = {}): CityModel {
+export function createCity(data: CityData, options: { lod?: DetailLevel; ground?: boolean; atmosphere?: AtmosphereUniforms; terrain?: TerrainTile; elevation?: (x: number, z: number) => number; waterLevels?: Record<string, number>; bridgeLevels?: Record<string, number>; waterSurfaces?: CityData['surfaces']; surfaceRings?: TerrainTile['surfaceRings']; groundElevation?: (x: number, z: number) => number } = {}): CityModel {
   const lod = options.lod ?? 'near';
   const atmosphere = options.atmosphere ?? atmosphereUniforms();
   const group = new Group();
+  const fallback = options.elevation ?? (() => 0);
+  const measured = options.terrain ? (x: number, z: number): number => tileElevation(options.terrain!, x, z) : fallback;
+  const sample = options.terrain ? meshElevation(options.terrain.vertices, options.terrain.indices[lod], measured) : options.groundElevation ?? measured;
+  const step = lod === 'near' ? 20 : lod === 'medium' ? 50 : 100;
   const geometries = new Set<BufferGeometry>();
   const materials = new Set<MeshStandardMaterial>();
   function material(color: string, vertexColors = false): MeshStandardMaterial {
@@ -73,6 +79,7 @@ export function createCity(data: CityData, options: { lod?: DetailLevel; ground?
     if (!merged) throw new Error('Assemblage des géométries impossible');
     add(merged, surface, shadows);
   }
+  if (options.terrain?.indices[lod].length) add(terrainGeometry(options.terrain.vertices, options.terrain.indices[lod], options.elevation), material('#d4d2c4'), false);
   if (options.ground !== false) {
   const ground = add(new BoxGeometry(data.meta.width + 6, 9, data.meta.depth + 6), material('#c5c6b4'));
   ground.position.y = -4.6;
@@ -83,14 +90,24 @@ export function createCity(data: CityData, options: { lod?: DetailLevel; ground?
 
   const surfaceParts: BufferGeometry[] = [], waterParts: BufferGeometry[] = [];
   // Parcs d'abord, puis places, puis eau : ordre stable de superposition.
-  const surfaces = [...data.surfaces].sort((a, b) => ({ green: 0, plaza: 1, water: 2 }[a.kind] - { green: 0, plaza: 1, water: 2 }[b.kind]));
+  const waterSurfaces = options.terrain?.waterSurfaces ?? options.waterSurfaces;
+  const visualSurfaces = waterSurfaces ? [...data.surfaces.filter((f) => f.kind !== 'water'), ...waterSurfaces] : data.surfaces;
+  const surfaces = visualSurfaces.flatMap((feature) => {
+    const clipped = (options.terrain?.surfaceRings ?? options.surfaceRings)?.[feature.id];
+    return clipped ? clipped.map((rings) => ({ ...feature, rings })) : [feature];
+  }).sort((a, b) => ({ green: 0, plaza: 1, water: 2 }[a.kind] - { green: 0, plaza: 1, water: 2 }[b.kind]));
   for (const feature of surfaces) {
     let geometry: BufferGeometry = new ShapeGeometry(footprintShape(feature.rings));
     geometry = geometry.toNonIndexed();
     geometry.rotateX(-Math.PI / 2);
     geometry.translate(0, feature.kind === 'water' ? 0.075 : feature.kind === 'plaza' ? 0.055 : 0.035, 0);
-    if (feature.kind === 'water') waterParts.push(geometry);
-    else surfaceParts.push(paint(geometry, new Color(feature.kind === 'green' ? '#9fb48a' : '#e0d5c0')));
+    if (feature.kind === 'water') {
+      geometry.translate(0, options.waterLevels?.[feature.id.split('@')[0]!] ?? 0, 0);
+      waterParts.push(geometry);
+    } else {
+      if (options.terrain || options.elevation) geometry = subdivideSurface(geometry, sample, step);
+      surfaceParts.push(paint(geometry, new Color(feature.kind === 'green' ? '#9fb48a' : '#e0d5c0')));
+    }
   }
   batch(surfaceParts, material('#ffffff', true), false);
   if (waterParts.length) {
@@ -101,10 +118,14 @@ export function createCity(data: CityData, options: { lod?: DetailLevel; ground?
   const pavementParts: BufferGeometry[] = [], roadParts: BufferGeometry[] = [];
   for (const road of data.roads) {
     if (['proposed', 'construction', 'platform', 'corridor'].includes(road.tags.highway ?? '')) continue;
+    if (road.tags.tunnel && road.tags.tunnel !== 'no' || Number(road.tags.layer) < 0) continue;
+    const points = options.terrain || options.elevation ? sampleLine(road.points, lod === 'near' ? 10 : lod === 'medium' ? 20 : 50) : road.points;
+    const deck = options.bridgeLevels?.[road.id.split('@')[0]!];
+    const roadSample = deck !== undefined ? (): number => deck : sample;
     const pedestrian = ['pedestrian', 'footway', 'path', 'steps', 'cycleway'].includes(road.tags.highway ?? '');
     const width = roadWidth(road.tags);
-    if (!pedestrian) pavementParts.push(paint(ribbon(road.points, width + 3, 0.08), new Color('#c3bfb3')));
-    roadParts.push(paint(ribbon(road.points, width, pedestrian ? 0.11 : 0.12), new Color(pedestrian ? '#ddd1bb' : '#999e9a')));
+    if (!pedestrian) pavementParts.push(paint(ribbon(points, width + 3, 0.08, roadSample), new Color('#c3bfb3')));
+    roadParts.push(paint(ribbon(points, width, pedestrian ? 0.11 : 0.12, roadSample), new Color(pedestrian ? '#ddd1bb' : '#999e9a')));
   }
   batch(pavementParts, material('#ffffff', true), false);
   batch(roadParts, material('#ffffff', true), false);
@@ -115,27 +136,33 @@ export function createCity(data: CityData, options: { lod?: DetailLevel; ground?
     const historic = wall.tags.historic === 'citywalls';
     const height = Math.min(20, metres(wall.tags.height) ?? (historic ? 9 : 1.6));
     const width = metres(wall.tags.width) ?? (historic ? 2.5 : 0.4);
-    for (let i = 1; i < wall.points.length; i++) {
-      const a = wall.points[i - 1]!, b = wall.points[i]!;
+    const points = options.terrain || options.elevation ? sampleLine(wall.points, 10) : wall.points;
+    for (let i = 1; i < points.length; i++) {
+      const a = points[i - 1]!, b = points[i]!;
+      const low = Math.min(sample(...a), sample(...b)), high = Math.max(sample(...a), sample(...b));
       const length = Math.hypot(b[0] - a[0], b[1] - a[1]);
       if (length < 0.05) continue;
-      const geometry = new BoxGeometry(length, height, width).toNonIndexed();
+      const geometry = new BoxGeometry(length, height + high - low, width).toNonIndexed();
       geometry.rotateY(-Math.atan2(b[1] - a[1], b[0] - a[0]));
-      geometry.translate((a[0] + b[0]) / 2, height / 2 + 0.16, (a[1] + b[1]) / 2);
+      geometry.translate((a[0] + b[0]) / 2, (high + low + height) / 2 + 0.16, (a[1] + b[1]) / 2);
       wallParts.push(paint(geometry, new Color(historic ? '#c5bba5' : '#c3c0b4')));
     }
   }
   batch(wallParts, material('#ffffff', true));
 
-  const bodies: BufferGeometry[] = [], roofs: BufferGeometry[] = [], cornices: BufferGeometry[] = [];
+  const bodies: BufferGeometry[] = [], foundations: BufferGeometry[] = [], roofs: BufferGeometry[] = [], cornices: BufferGeometry[] = [];
   const windowTransforms: { x: number; y: number; z: number; angle: number; w: number; h: number; light: [number, number, number] }[] = [];
   let estimatedHeights = 0;
   for (const feature of data.buildings) {
     const style = buildingStyle(feature);
     if (lod === 'far') { style.roofHeight = 0; style.roofShape = 'flat'; }
     if (style.heightSource === 'estimated') estimatedHeights++;
-    bodies.push(buildingBody(feature, style));
-    roofs.push(buildingRoof(feature, style));
+    const measured = options.terrain?.bases[feature.id];
+    const levels = measured ?? [Math.min(...feature.rings[0]!.map(([x, z]) => sample(x, z))), Math.max(...feature.rings[0]!.map(([x, z]) => sample(x, z)))];
+    const base = levels[1]!;
+    if ((options.terrain || options.elevation) && style.base === 0) foundations.push(buildingFoundation(feature, levels[0]!, base, style.facade.clone().multiplyScalar(.82)));
+    bodies.push(buildingBody(feature, style).translate(0, base, 0));
+    roofs.push(buildingRoof(feature, style).translate(0, base, 0));
     if (lod !== 'near') continue;
     const eaves = style.height - style.roofHeight;
     const seed = seedOf(feature.id);
@@ -153,7 +180,7 @@ export function createCity(data: CityData, options: { lod?: DetailLevel; ground?
         if (floorHeight < 2) continue;
         for (let floor = 1; floor <= style.levels; floor++) {
           const y = style.base + floor * floorHeight;
-          for (const [p, h] of [[a, y], [b, y], [b, y + 0.12], [a, y], [b, y + 0.12], [a, y + 0.12]] as [Point, number][]) positions.push(p[0] + nx * 0.08, h + 0.16, p[1] + nz * 0.08);
+          for (const [p, h] of [[a, y], [b, y], [b, y + 0.12], [a, y], [b, y + 0.12], [a, y + 0.12]] as [Point, number][]) positions.push(p[0] + nx * 0.08, h + 0.16 + base, p[1] + nz * 0.08);
         }
         const trim = new BufferGeometry();
         trim.setAttribute('position', new Float32BufferAttribute(positions, 3));
@@ -167,7 +194,7 @@ export function createCity(data: CityData, options: { lod?: DetailLevel; ground?
             windowTransforms.push({
               x: a[0] + dx * t + nx * 0.11,
               z: a[1] + dz * t + nz * 0.11,
-              y: style.base + 0.16 + (floor + 0.52) * floorHeight,
+              y: base + style.base + 0.16 + (floor + 0.52) * floorHeight,
               angle: Math.atan2(nx, nz), w: shop ? 1.65 : 0.95 + seed % 3 * 0.12,
               h: Math.min(floorHeight * 0.58, shop ? 2 : 1.6), light: windowIllumination(`${feature.id}:${r}:${i}:${floor}:${column}`),
             });
@@ -176,6 +203,7 @@ export function createCity(data: CityData, options: { lod?: DetailLevel; ground?
       }
     }
   }
+  batch(foundations, material('#ffffff', true));
   batch(bodies, material('#ffffff', true));
   batch(roofs, material('#ffffff', true));
   batch(cornices, material('#ffffff', true), false);
@@ -210,9 +238,9 @@ export function createCity(data: CityData, options: { lod?: DetailLevel; ground?
   data.trees.forEach(([x, z], i) => {
     const variation = seedOf(`${x}:${z}`);
     dummy.rotation.set(0, variation % 6, 0);
-    dummy.position.set(x, 1.5, z); dummy.scale.set(1, 1, 1);
+    dummy.position.set(x, sample(x, z) + 1.5, z); dummy.scale.set(1, 1, 1);
     dummy.updateMatrix(); trunks.setMatrixAt(i, dummy.matrix);
-    dummy.position.y = 4.2;
+    dummy.position.y = sample(x, z) + 4.2;
     const size = 2 + variation % 4 * 0.35;
     dummy.scale.set(size, size * 1.15, size);
     dummy.updateMatrix(); foliage.setMatrixAt(i, dummy.matrix);

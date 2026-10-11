@@ -1,0 +1,2127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<gmd:MD_Metadata xmlns:gco="http://www.isotc211.org/2005/gco"
+                 xmlns:gts="http://www.isotc211.org/2005/gts"
+                 xmlns:xs="http://www.w3.org/2001/XMLSchema"
+                 xmlns:gml="http://www.opengis.net/gml"
+                 xmlns:gsr="http://www.isotc211.org/2005/gsr"
+                 xmlns:gmx="http://www.isotc211.org/2005/gmx"
+                 xmlns:gss="http://www.isotc211.org/2005/gss"
+                 xmlns:xlink="http://www.w3.org/1999/xlink"
+                 xmlns:gmd="http://www.isotc211.org/2005/gmd"
+                 xmlns:srv="http://www.isotc211.org/2005/srv"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 xmlns:xi="http://www.w3.org/2001/XInclude"
+                 uuid="IGNF_RGEALTIr_2-0_ASC_5M_LAMB93_IGN69_D044">
+   <gmd:fileIdentifier>
+      <gco:CharacterString>IGNF_RGEALTIr_2-0_ASC_5M_LAMB93_IGN69_D044.xml</gco:CharacterString>
+   </gmd:fileIdentifier>
+   <gmd:language>
+      <gmd:LanguageCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#LanguageCode"
+                        codeListValue="fre">fre</gmd:LanguageCode>
+   </gmd:language>
+   <gmd:characterSet>
+      <gmd:MD_CharacterSetCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#MD_CharacterSetCode"
+                               codeListValue="utf8">utf8</gmd:MD_CharacterSetCode>
+   </gmd:characterSet>
+   <gmd:hierarchyLevel>
+      <gmd:MD_ScopeCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#MD_ScopeCode"
+                        codeListValue="dataset">dataset</gmd:MD_ScopeCode>
+   </gmd:hierarchyLevel>
+   <gmd:hierarchyLevelName>
+      <gco:CharacterString>Lot</gco:CharacterString>
+   </gmd:hierarchyLevelName>
+   <gmd:contact>
+      <gmd:CI_ResponsibleParty/>
+   </gmd:contact>
+   <gmd:dateStamp>
+      <gco:Date>2023-02-02</gco:Date>
+   </gmd:dateStamp>
+   <gmd:metadataStandardName>
+      <gco:CharacterString>ISO 19115</gco:CharacterString>
+   </gmd:metadataStandardName>
+   <gmd:metadataStandardVersion>
+      <gco:CharacterString>2003 Cor.1:2006</gco:CharacterString>
+   </gmd:metadataStandardVersion>
+   <gmd:spatialRepresentationInfo>
+      <gmd:MD_SpatialRepresentationTypeCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#MD_SpatialRepresentationTypeCode"
+                                            codeListValue="grid">grid</gmd:MD_SpatialRepresentationTypeCode>
+   </gmd:spatialRepresentationInfo>
+   <gmd:referenceSystemInfo>
+      <gmd:MD_ReferenceSystem>
+         <gmd:referenceSystemIdentifier>
+            <gmd:RS_Identifier>
+               <gmd:code>
+                  <gmx:Anchor xlink:href="https://registre.ign.fr/ign/IGNF/IGNF.xml#LAMB93">RGF93 v1 Lambert 93</gmx:Anchor>
+               </gmd:code>
+               <gmd:codeSpace>
+                  <gco:CharacterString>urn:ogc:def:crs:IGNF:1.1</gco:CharacterString>
+               </gmd:codeSpace>
+            </gmd:RS_Identifier>
+         </gmd:referenceSystemIdentifier>
+      </gmd:MD_ReferenceSystem>
+   </gmd:referenceSystemInfo>
+   <gmd:identificationInfo>
+      <gmd:MD_DataIdentification>
+         <gmd:citation>
+            <gmd:CI_Citation>
+               <gmd:title>
+                  <gco:CharacterString>RGEALTIr_2-0 traitement du 2023-02-02</gco:CharacterString>
+               </gmd:title>
+               <gmd:date>
+                  <gmd:CI_Date>
+                     <gmd:date>
+                        <gco:Date>2023-02-02</gco:Date>
+                     </gmd:date>
+                     <gmd:dateType>
+                        <gmd:CI_DateTypeCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#CI_DateTypeCode"
+                                             codeListValue="creation">creation</gmd:CI_DateTypeCode>
+                     </gmd:dateType>
+                  </gmd:CI_Date>
+               </gmd:date>
+               <gmd:edition>
+                  <gco:CharacterString>2022-12-20</gco:CharacterString>
+               </gmd:edition>
+               <gmd:editionDate>
+                  <gco:Date>2022-12-20</gco:Date>
+               </gmd:editionDate>
+               <gmd:identifier>
+                  <gmd:MD_Identifier id="IGNF_RGEALTIr_2-0_ASC_5M_LAMB93_IGN69_D044.identifier">
+                     <gmd:code>
+                        <gco:CharacterString>IGNF_RGEALTIr_2-0_ASC_5M_LAMB93_IGN69_D044</gco:CharacterString>
+                     </gmd:code>
+                  </gmd:MD_Identifier>
+               </gmd:identifier>
+               <gmd:series>
+                  <gmd:CI_Series>
+                     <gmd:name>
+                        <gco:CharacterString>IGNF_RGEALTIr_2-0.xml</gco:CharacterString>
+                     </gmd:name>
+                     <gmd:issueIdentification>
+                        <gco:CharacterString>Produit</gco:CharacterString>
+                     </gmd:issueIdentification>
+                  </gmd:CI_Series>
+               </gmd:series>
+            </gmd:CI_Citation>
+         </gmd:citation>
+         <gmd:abstract>
+            <gco:CharacterString>Le MNT RGE ALTI® est un modèle numérique de terrain maillé diffusé aux pas de 1 m et 5m. Il décrit la forme et l’altitude normale de la surface du sol. Il est conçu pour une utilisation à des échelles comprises entre le 1 : 3 000 et le 1 : 20 000.</gco:CharacterString>
+         </gmd:abstract>
+         <gmd:status>
+            <gmd:MD_ProgressCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#MD_ProgressCode"
+                                 codeListValue="onGoing">onGoing</gmd:MD_ProgressCode>
+         </gmd:status>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty/>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>E-MEGALIS_BRETAGNE</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator resourceProvider processor">originator resourceProvider processor</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>CR_ILE-DE-FRANCE</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="funder">funder</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>PBTE</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator">originator</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>PBTI</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator">originator</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>E-MEGALIS_BRETAGNE</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator resourceProvider processor">originator resourceProvider processor</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>CR_ILE-DE-FRANCE</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="funder">funder</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>PBTE</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator">originator</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>PBTI</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator">originator</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>DDTM_56</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="resourceProvider">resourceProvider</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>DIRNO</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator">originator</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>CR_ILE-DE-FRANCE</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="funder">funder</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>PBL</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator">originator</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>PBTE</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator">originator</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>PBTI</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator">originator</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>PBTJ</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator">originator</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>SINTEGRA-BSF-APEI-SWISSPHOTO</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="processor">processor</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>AERODATA-TERRAIMAGING</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="processor">processor</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>BLOM</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="processor">processor</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>CRAIG</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator resourceProvider processor">originator resourceProvider processor</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>DDTM_56</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="resourceProvider">resourceProvider</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>DIRNO</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator">originator</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>IMAO-GEOPHENIX</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="processor">processor</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>CR_ILE-DE-FRANCE</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="funder">funder</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>PBTE</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator">originator</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>PBTH</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator">originator</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>PBTI</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator">originator</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>PBTJ</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator">originator</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>SINTEGRA-BSF-APEI-SWISSPHOTO</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="processor">processor</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>AERODATA-TERRAIMAGING</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="processor">processor</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>AVINEON</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="processor">processor</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>BLOM</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="processor">processor</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>DDTM_59</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="resourceProvider">resourceProvider</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>DREAL_RHONE-ALPES</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="resourceProvider">resourceProvider</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>E-MEGALIS_BRETAGNE</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator resourceProvider processor">originator resourceProvider processor</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>FIT_CONSEIL</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="processor">processor</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>GIPSA</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="resourceProvider">resourceProvider</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>IMAO-GEOPHENIX</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="processor">processor</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>CR_ILE-DE-FRANCE</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="funder">funder</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>PBL</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator">originator</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>PBTE</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator">originator</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>PBTH</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator">originator</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>PBTI</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator">originator</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>SINTEGRA-BSF-APEI-SWISSPHOTO</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="processor">processor</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>AERODATA-TERRAIMAGING</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="processor">processor</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>AVINEON</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="processor">processor</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>BLOM</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="processor">processor</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>CG_68</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="funder resourceProvider">funder resourceProvider</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>CRAIG</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator resourceProvider processor">originator resourceProvider processor</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>DDT_67</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="resourceProvider">resourceProvider</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>DIRNO</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator">originator</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>DREAL_CENTRE</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="resourceProvider">resourceProvider</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>DREAL_RHONE-ALPES</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="resourceProvider">resourceProvider</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>E-MEGALIS_BRETAGNE</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator resourceProvider processor">originator resourceProvider processor</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>FIT_CONSEIL</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="processor">processor</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>CR_ILE-DE-FRANCE</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="funder">funder</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>PBL</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator">originator</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>PBTE</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator">originator</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>PBTH</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator">originator</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>PBTI</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator">originator</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>PPIGE</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator funder resourceProvider processor">originator funder resourceProvider processor</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>SINTEGRA-BSF-APEI-SWISSPHOTO</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="processor">processor</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>AERODATA-TERRAIMAGING</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="processor">processor</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>BLOM</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="processor">processor</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>DDTM_56</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="resourceProvider">resourceProvider</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>DDTM_59</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="resourceProvider">resourceProvider</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>DIRNO</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator">originator</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>DREAL_CENTRE</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="resourceProvider">resourceProvider</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>DREAL_RHONE-ALPES</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="resourceProvider">resourceProvider</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>E-MEGALIS_BRETAGNE</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator resourceProvider processor">originator resourceProvider processor</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>FIT_CONSEIL</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="processor">processor</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>GIPSA</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="resourceProvider">resourceProvider</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>IMAO-GEOPHENIX</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="processor">processor</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>CR_ILE-DE-FRANCE</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="funder">funder</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>PBL</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator">originator</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>PBTE</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator">originator</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>PBTH</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator">originator</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>PBTI</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator">originator</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>PBTJ</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator">originator</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>SINTEGRA-BSF-APEI-SWISSPHOTO</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="processor">processor</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>DREAL_CENTRE</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="resourceProvider">resourceProvider</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>E-MEGALIS_BRETAGNE</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator resourceProvider processor">originator resourceProvider processor</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>PBTI</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator">originator</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>DREAL_CENTRE</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="resourceProvider">resourceProvider</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>FIT_CONSEIL</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="processor">processor</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>IMAO-GEOPHENIX</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="processor">processor</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>CR_ILE-DE-FRANCE</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="funder">funder</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>PBL</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator">originator</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>PBTE</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator">originator</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>PBTI</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator">originator</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>SINTEGRA-BSF-APEI-SWISSPHOTO</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="processor">processor</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>CR_ILE-DE-FRANCE</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="funder">funder</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>PBTE</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator">originator</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>PBTI</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator">originator</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>SINTEGRA-BSF-APEI-SWISSPHOTO</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="processor">processor</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>CGR_ATGT</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="processor">processor</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>CR_ILE-DE-FRANCE</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="funder">funder</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>PBTI</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator">originator</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>CR_ILE-DE-FRANCE</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="funder">funder</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>PBTE</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator">originator</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>PBTI</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator">originator</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>CR_ILE-DE-FRANCE</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="funder">funder</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>PBTE</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator">originator</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>PBTI</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator">originator</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>CR_ILE-DE-FRANCE</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="funder">funder</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>DDTM_56</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="resourceProvider">resourceProvider</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>E-MEGALIS_BRETAGNE</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator resourceProvider processor">originator resourceProvider processor</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>CR_ILE-DE-FRANCE</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="funder">funder</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>PBL</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator">originator</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>PBTI</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator">originator</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>E-MEGALIS_BRETAGNE</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator resourceProvider processor">originator resourceProvider processor</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>CR_ILE-DE-FRANCE</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="funder">funder</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>PBTE</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator">originator</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>PBTI</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator">originator</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>IMAO-GEOPHENIX</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="processor">processor</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>CR_ILE-DE-FRANCE</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="funder">funder</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>PBL</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator">originator</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>PBTE</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator">originator</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>PBTI</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator">originator</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>SINTEGRA-BSF-APEI-SWISSPHOTO</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="processor">processor</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>DDTM_56</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="resourceProvider">resourceProvider</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>E-MEGALIS_BRETAGNE</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator resourceProvider processor">originator resourceProvider processor</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>CR_ILE-DE-FRANCE</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="funder">funder</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>PBL</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator">originator</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>PBTE</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator">originator</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>PBTI</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator">originator</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>PBTJ</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator">originator</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>DDTM_56</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="resourceProvider">resourceProvider</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>DIRNO</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator">originator</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>E-MEGALIS_BRETAGNE</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator resourceProvider processor">originator resourceProvider processor</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>CR_ILE-DE-FRANCE</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="funder">funder</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>PBTE</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator">originator</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>PBTI</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator">originator</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>SINTEGRA-BSF-APEI-SWISSPHOTO</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="processor">processor</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>DDTM_56</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="resourceProvider">resourceProvider</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>E-MEGALIS_BRETAGNE</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator resourceProvider processor">originator resourceProvider processor</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>CR_ILE-DE-FRANCE</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="funder">funder</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>PBTE</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator">originator</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>PBTI</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator">originator</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>CR_ILE-DE-FRANCE</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="funder">funder</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>DDTM_56</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="resourceProvider">resourceProvider</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>IMAO-GEOPHENIX</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="processor">processor</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>CR_ILE-DE-FRANCE</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="funder">funder</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>PBL</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator">originator</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>PBTE</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator">originator</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>PBTI</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator">originator</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>SINTEGRA-BSF-APEI-SWISSPHOTO</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="processor">processor</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>CR_ILE-DE-FRANCE</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="funder">funder</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>CR_ILE-DE-FRANCE</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="funder">funder</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>CRAIG</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator resourceProvider processor">originator resourceProvider processor</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>CR_ILE-DE-FRANCE</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="funder">funder</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>PBTE</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator">originator</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>PBTI</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator">originator</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>CR_ILE-DE-FRANCE</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="funder">funder</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>PBTE</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator">originator</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:pointOfContact>
+            <gmd:CI_ResponsibleParty>
+               <gmd:organisationName>
+                  <gco:CharacterString>PBTI</gco:CharacterString>
+               </gmd:organisationName>
+               <gmd:role>
+                  <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#http://interop.ign.fr/registres/CodeLists.xml#CI_RoleCode"
+                                   codeListValue="originator">originator</gmd:CI_RoleCode>
+               </gmd:role>
+            </gmd:CI_ResponsibleParty>
+         </gmd:pointOfContact>
+         <gmd:resourceMaintenance>
+            <gmd:MD_MaintenanceInformation id="IGNF_RGEALTIr_2-0.resourceMaintenance_1">
+               <gmd:maintenanceAndUpdateFrequency>
+                  <gmd:MD_MaintenanceFrequencyCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#MD_MaintenanceFrequencyCode"
+                                                   codeListValue="irregular">irregular</gmd:MD_MaintenanceFrequencyCode>
+               </gmd:maintenanceAndUpdateFrequency>
+               <gmd:maintenanceNote>
+                  <gco:CharacterString>irrégulière</gco:CharacterString>
+               </gmd:maintenanceNote>
+            </gmd:MD_MaintenanceInformation>
+         </gmd:resourceMaintenance>
+         <gmd:resourceFormat>
+            <gmd:MD_Format>
+               <gmd:name>
+                  <gco:CharacterString>ASC</gco:CharacterString>
+               </gmd:name>
+               <gmd:version>
+                  <gco:CharacterString>non renseigné</gco:CharacterString>
+               </gmd:version>
+            </gmd:MD_Format>
+         </gmd:resourceFormat>
+         <gmd:descriptiveKeywords>
+            <gmd:MD_Keywords>
+               <gmd:keyword>non renseigné</gmd:keyword>
+               <gmd:thesaurusName>
+                  <gmd:CI_Citation>
+                     <gmd:title>
+                        <gco:CharacterString>GEMET - INSPIRE themes, version 1.0</gco:CharacterString>
+                     </gmd:title>
+                     <gmd:date>
+                        <gmd:CI_Date>
+                           <gmd:date>
+                              <gco:Date>non renseigné</gco:Date>
+                           </gmd:date>
+                           <gmd:dateType>
+                              <gmd:CI_DateTypeCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#CI_DateTypeCode"
+                                                   codeListValue="publication">publication</gmd:CI_DateTypeCode>
+                           </gmd:dateType>
+                        </gmd:CI_Date>
+                     </gmd:date>
+                  </gmd:CI_Citation>
+               </gmd:thesaurusName>
+            </gmd:MD_Keywords>
+         </gmd:descriptiveKeywords>
+         <gmd:descriptiveKeywords>
+            <gmd:MD_Keywords>
+               <gmd:keyword>
+                  <gco:CharacterString>non renseigné</gco:CharacterString>
+               </gmd:keyword>
+               <gmd:type>
+                  <gmd:MD_KeywordTypeCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#MD_KeywordTypeCode"
+                                          codeListValue="theme">theme</gmd:MD_KeywordTypeCode>
+               </gmd:type>
+            </gmd:MD_Keywords>
+         </gmd:descriptiveKeywords>
+         <gmd:resourceSpecificUsage/>
+         <gmd:resourceConstraints>
+            <gmd:MD_Constraints id="IGNF_RGEALTIr_2-0.resourceConstraints_1">
+               <gmd:useLimitation>
+                  <gco:CharacterString/>
+               </gmd:useLimitation>
+            </gmd:MD_Constraints>
+         </gmd:resourceConstraints>
+         <gmd:resourceConstraints>
+            <gmd:MD_LegalConstraints id="IGNF_RGEALTIr_2-0.LegalConstraints_1">
+               <gmd:accessConstraints>
+                  <gmd:MD_RestrictionCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#MD_RestrictionCode"
+                                          codeListValue="license">license</gmd:MD_RestrictionCode>
+               </gmd:accessConstraints>
+               <gmd:useConstraints>
+                  <gmd:MD_RestrictionCode codeList="http://registre.ign.fr/ign/legacy/codelist/isoCodeListsExtensions/MD_RestrictionCode"
+                                          codeListValue="otherRestrictions"/>
+               </gmd:useConstraints>
+               <gmd:otherConstraints xsi:type="gmd:PT_FreeText_PropertyType">
+                  <gco:CharacterString>Pas de restriction d'accès public selon INSPIRE</gco:CharacterString>
+               </gmd:otherConstraints>
+               <gmd:otherConstraints>
+                  <gco:CharacterString/>
+               </gmd:otherConstraints>
+            </gmd:MD_LegalConstraints>
+         </gmd:resourceConstraints>
+         <gmd:resourceConstraints>
+            <gmd:MD_SecurityConstraints>
+               <gmd:useLimitation>
+                  <gco:CharacterString>Aucune contrainte</gco:CharacterString>
+               </gmd:useLimitation>
+               <gmd:classification>
+                  <gmd:MD_ClassificationCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#MD_ClassificationCode"
+                                             codeListValue="unclassified">unclassified</gmd:MD_ClassificationCode>
+               </gmd:classification>
+            </gmd:MD_SecurityConstraints>
+         </gmd:resourceConstraints>
+         <gmd:spatialRepresentationType>
+            <gmd:MD_SpatialRepresentationTypeCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#MD_SpatialRepresentationTypeCode"
+                                                  codeListValue="grid">grid</gmd:MD_SpatialRepresentationTypeCode>
+         </gmd:spatialRepresentationType>
+         <gmd:spatialResolution>
+            <gmd:MD_Resolution>
+               <gmd:equivalentScale/>
+            </gmd:MD_Resolution>
+         </gmd:spatialResolution>
+         <gmd:language>
+            <gmd:LanguageCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#LanguageCode"
+                              codeListValue="fre">fre</gmd:LanguageCode>
+         </gmd:language>
+         <gmd:topicCategory>
+            <gmd:MD_TopicCategoryCode>non renseigné</gmd:MD_TopicCategoryCode>
+         </gmd:topicCategory>
+         <gmd:extent>
+            <gmd:EX_Extent>
+               <gmd:description>
+                  <gco:CharacterString>Extraction - Commande : dpsg2023-01-00223</gco:CharacterString>
+               </gmd:description>
+               <gmd:geographicElement>
+                  <gmd:EX_GeographicBoundingBox>
+                     <gmd:westBoundLongitude>
+                        <gco:Decimal>-2.6443</gco:Decimal>
+                     </gmd:westBoundLongitude>
+                     <gmd:eastBoundLongitude>
+                        <gco:Decimal>-0.9081</gco:Decimal>
+                     </gmd:eastBoundLongitude>
+                     <gmd:southBoundLatitude>
+                        <gco:Decimal>46.8135</gco:Decimal>
+                     </gmd:southBoundLatitude>
+                     <gmd:northBoundLatitude>
+                        <gco:Decimal>47.8599</gco:Decimal>
+                     </gmd:northBoundLatitude>
+                  </gmd:EX_GeographicBoundingBox>
+               </gmd:geographicElement>
+               <gmd:geographicElement>
+                  <gmd:EX_GeographicDescription>
+                     <gmd:geographicIdentifier>
+                        <gmd:RS_Identifier>
+                           <gmd:authority/>
+                           <gmd:code>
+                              <gco:CharacterString/>
+                           </gmd:code>
+                           <gmd:codeSpace>
+                              <gco:CharacterString>http://xml.insee.fr/schema/cog.xsd#xpointer(//*[@name='Code_Département_stype'])</gco:CharacterString>
+                           </gmd:codeSpace>
+                           <gmd:version>
+                              <gco:CharacterString>2006</gco:CharacterString>
+                           </gmd:version>
+                        </gmd:RS_Identifier>
+                     </gmd:geographicIdentifier>
+                  </gmd:EX_GeographicDescription>
+               </gmd:geographicElement>
+            </gmd:EX_Extent>
+         </gmd:extent>
+         <gmd:extent>
+            <gmd:EX_Extent>
+               <gmd:description>
+                  <gco:CharacterString>Actualité des thèmes</gco:CharacterString>
+               </gmd:description>
+               <gmd:temporalElement>
+                  <gmd:EX_TemporalExtent>
+                     <gmd:extent>
+                        <gml:TimePeriod gml:id="RGEALTIr_2-0_ASC_5M_LAMB93_IGN69_D044.temporalExtent_1">
+                           <gml:beginPosition>1900-01-01</gml:beginPosition>
+                           <gml:endPosition>2020-06-01</gml:endPosition>
+                        </gml:TimePeriod>
+                     </gmd:extent>
+                  </gmd:EX_TemporalExtent>
+               </gmd:temporalElement>
+            </gmd:EX_Extent>
+         </gmd:extent>
+         <gmd:supplementalInformation>
+            <gco:CharacterString>Le MNT RGE ALTI® est issu de sources différentes : d'acquisition LiDAR (la précision est comprise entre 0.10 et 0.30 cm), d'acquisition externes (la précision est comprise entre 2 et 7 m) et de corrélation d'images aériennes (la précision est comprise entre 0.50 et 0.70 cm).</gco:CharacterString>
+         </gmd:supplementalInformation>
+      </gmd:MD_DataIdentification>
+   </gmd:identificationInfo>
+   <gmd:distributionInfo>
+      <gmd:MD_Distribution>
+         <gmd:distributionFormat>
+            <gmd:MD_Format id="IGNF_RGEALTIr_2-0_ASC_5M_LAMB93_IGN69_D044.distributionFormat.ASC">
+               <gmd:name>
+                  <gco:CharacterString>non renseigné</gco:CharacterString>
+               </gmd:name>
+               <gmd:version>
+                  <gco:CharacterString>non renseigné</gco:CharacterString>
+               </gmd:version>
+               <gmd:fileDecompressionTechnique>
+                  <gco:CharacterString>gunzip</gco:CharacterString>
+               </gmd:fileDecompressionTechnique>
+               <gmd:formatDistributor>
+                  <gmd:MD_Distributor>
+                     <gmd:distributorContact>
+                        <gmd:CI_ResponsibleParty>
+                           <gmd:organisationName>
+                              <gco:CharacterString>non renseigné</gco:CharacterString>
+                           </gmd:organisationName>
+                           <gmd:contactInfo>
+                              <gmd:CI_Contact>
+                                 <gmd:onlineResource>
+                                    <gmd:CI_OnlineResource>
+                                       <gmd:linkage>
+                                          <gmd:URL>non renseigné</gmd:URL>
+                                       </gmd:linkage>
+                                       <gmd:protocol>
+                                          <gco:CharacterString>non renseigné</gco:CharacterString>
+                                       </gmd:protocol>
+                                    </gmd:CI_OnlineResource>
+                                 </gmd:onlineResource>
+                              </gmd:CI_Contact>
+                           </gmd:contactInfo>
+                           <gmd:role>
+                              <gmd:CI_RoleCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#CI_RoleCode"
+                                               codeListValue="originator">originator</gmd:CI_RoleCode>
+                           </gmd:role>
+                        </gmd:CI_ResponsibleParty>
+                     </gmd:distributorContact>
+                  </gmd:MD_Distributor>
+               </gmd:formatDistributor>
+            </gmd:MD_Format>
+         </gmd:distributionFormat>
+         <gmd:distributor>
+            <gmd:MD_Distributor id="IGNF_RGEALTIr_2-0_ASC_5M_LAMB93_IGN69_D044.distributor.IGN-F">
+               <gmd:distributorContact>
+                  <gmd:CI_ResponsibleParty/>
+               </gmd:distributorContact>
+               <gmd:distributionOrderProcess>
+                  <gmd:MD_StandardOrderProcess>
+                     <gmd:fees>
+                        <gco:CharacterString>Voir catalogue des prix IGN</gco:CharacterString>
+                     </gmd:fees>
+                     <gmd:orderingInstructions>
+                        <gco:CharacterString>Voir site internet www.ign.fr</gco:CharacterString>
+                     </gmd:orderingInstructions>
+                  </gmd:MD_StandardOrderProcess>
+               </gmd:distributionOrderProcess>
+            </gmd:MD_Distributor>
+         </gmd:distributor>
+         <gmd:transferOptions>
+            <gmd:MD_DigitalTransferOptions>
+               <gmd:onLine>
+                  <gmd:CI_OnlineResource>
+                     <gmd:linkage>
+                        <gmd:URL>http://www.ign.fr/</gmd:URL>
+                     </gmd:linkage>
+                     <gmd:function>
+                        <gmd:CI_OnLineFunctionCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#CI_OnLineFunctionCode"
+                                                   codeListValue="information">information</gmd:CI_OnLineFunctionCode>
+                     </gmd:function>
+                  </gmd:CI_OnlineResource>
+               </gmd:onLine>
+               <gmd:onLine>
+                  <gmd:CI_OnlineResource>
+                     <gmd:linkage>
+                        <gmd:URL>http://www.geoportail.fr/</gmd:URL>
+                     </gmd:linkage>
+                     <gmd:function>
+                        <gmd:CI_OnLineFunctionCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#CI_OnLineFunctionCode"
+                                                   codeListValue="information">information</gmd:CI_OnLineFunctionCode>
+                     </gmd:function>
+                  </gmd:CI_OnlineResource>
+               </gmd:onLine>
+            </gmd:MD_DigitalTransferOptions>
+         </gmd:transferOptions>
+      </gmd:MD_Distribution>
+   </gmd:distributionInfo>
+   <gmd:dataQualityInfo>
+      <gmd:DQ_DataQuality>
+         <gmd:scope>
+            <gmd:DQ_Scope>
+               <gmd:level>
+                  <gmd:MD_ScopeCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#MD_ScopeCode"
+                                    codeListValue="dataset">dataset</gmd:MD_ScopeCode>
+               </gmd:level>
+            </gmd:DQ_Scope>
+         </gmd:scope>
+         <gmd:lineage>
+            <gmd:LI_Lineage>
+               <gmd:statement>
+                  <gco:CharacterString>Plusieurs techniques d’acquisition des données sont mises en œuvre par l'IGN selon le type de paysage et les besoins des utilisateurs, la technologie LiDAR est déployée pour les zones inondables, les zones littorales et sur les grands massifs forestiers ; la technologie Radar est utilisée sur les zones de montagne (Alpes, Pyrénées, Cévennes, Corse) ; les techniques de corrélation de photographies aériennes sont utilisées sur le reste du territoire. Sur certaines zones traitées par corrélation, en cas d’absence de mesure au sol sur de larges étendues en raison de la présence de sursol (massifs boisés par exemple), des données altimétriques anciennes sont utilisées pour combler ces manques.</gco:CharacterString>
+               </gmd:statement>
+               <gmd:processStep>
+                  <gmd:LI_ProcessStep>
+                     <gmd:description>
+                        <gco:CharacterString>Information générale au produit</gco:CharacterString>
+                     </gmd:description>
+                     <gmd:rationale>
+                        <gco:CharacterString>production</gco:CharacterString>
+                     </gmd:rationale>
+                     <gmd:dateTime>
+                        <gco:DateTime/>
+                     </gmd:dateTime>
+                     <gmd:processor>
+                        <gmd:CI_ResponsibleParty/>
+                     </gmd:processor>
+                  </gmd:LI_ProcessStep>
+               </gmd:processStep>
+            </gmd:LI_Lineage>
+         </gmd:lineage>
+      </gmd:DQ_DataQuality>
+   </gmd:dataQualityInfo>
+   <gmd:metadataConstraints>
+      <gmd:MD_SecurityConstraints>
+         <gmd:useLimitation>
+            <gco:CharacterString>Aucune contrainte</gco:CharacterString>
+         </gmd:useLimitation>
+         <gmd:classification>
+            <gmd:MD_ClassificationCode codeList="https://registre.ign.fr/ign/legacy/isoCodeListsExtensions.xml#MD_ClassificationCode"
+                                       codeListValue="unclassified">unclassified</gmd:MD_ClassificationCode>
+         </gmd:classification>
+      </gmd:MD_SecurityConstraints>
+   </gmd:metadataConstraints>
+</gmd:MD_Metadata>

@@ -1,3 +1,5 @@
+import type { TerrainTile } from './terrain';
+
 export type Point = [number, number];
 export interface Feature {
   id: string;
@@ -6,6 +8,7 @@ export interface Feature {
   visual?: { height: number; roofShape: string }; // Agrégats graphiques, séparés des tags OSM.
 }
 export interface CityData {
+  terrain?: TerrainTile; // Association runtime ; les fichiers OSM ne sont pas modifiés.
   meta: {
     bbox: number[];
     origin: Point;

@@ -80,3 +80,6 @@
   .nantes-time-actions { gap: 8px; }
   .nantes-sun-events { width: 100%; margin-left: 0; }
 }
+
+.nantes-terrain-source { margin: 8px 0; color: #647269; font-size: 11px; }
+.nantes-terrain-source a { color: inherit; }

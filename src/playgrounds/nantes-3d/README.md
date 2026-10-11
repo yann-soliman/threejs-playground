@@ -1,4 +1,4 @@
-# Nantes 3D — V4A
+# Nantes 3D — V4B
 
 Diorama interactif de **toute la commune de Nantes**, dans l’architecture existante
 `mount(container): Cleanup`. Three.js, TypeScript strict, HTML/CSS natifs et fichiers
@@ -27,8 +27,9 @@ Lien : `#/playgrounds/nantes-3d`.
   des suffixes ; ces compteurs décrivent les géométries produites, pas les adresses.
 - **329 tuiles de 500 × 500 m**, trois fichiers par tuile. La superficie projetée
   est d’environ **65,6 km²** ; ce calcul graphique n’est pas une superficie cadastrale.
-- Environ **69,6 Mo** de données déployées : 67,5 Mo de tuiles, 2,0 Mo de vue générale
-  et le manifeste. Les tuiles ne sont pas toutes téléchargées au démarrage.
+- Environ **69,6 Mo** de données OSM déployées : 67,5 Mo de tuiles, 2,0 Mo de vue générale
+  et le manifeste, auxquels s’ajoutent **19,48 Mo de relief IGN** en V4B.
+  Les tuiles ne sont pas toutes téléchargées au démarrage.
 
 **© OpenStreetMap contributors** — [attribution](https://www.openstreetmap.org/copyright)
 et [ODbL 1.0](https://opendatacommons.org/licenses/odbl/1-0/), visibles dans la scène.
@@ -244,6 +245,146 @@ changements manuels d’heure restent disponibles. La préférence est suivie à
 écouteurs/observateurs et destruction des matériaux d’eau, fenêtres et autres
 ressources V3. Les 989 fichiers géographiques V3 sont inchangés.
 
+## Relief réel IGN — V4B
+
+Le terrain couvre les **329 tuiles de toute la commune**, avec un facteur vertical
+**1,0**. Source officielle : [IGN RGE ALTI 5 m, Loire-Atlantique](https://geoservices.ign.fr/rgealti),
+édition **2022-12-20**, téléchargée le **11 octobre 2026**, sous
+[Licence ouverte Etalab 2.0](https://www.etalab.gouv.fr/licence-ouverte-open-licence/).
+Il s’agit d’un **MNT de sol**, pas d’un modèle de surface avec bâtiments.
+Les métadonnées originales sont conservées dans `data/terrain-source.xml` et
+`data/terrain-download.xml`. La date d’édition ne constitue pas une date unique
+de levé : la livraison assemble des acquisitions et méthodes de précision variable.
+
+Archive officielle départementale :
+`RGEALTI_2-0_5M_ASC_LAMB93-IGN69_D044_2022-12-20.7z`, 313 638 699 octets,
+SHA-256 `6047d72dff5ae023727590bf3ef703f7e1da6814211fd86614122ffaf4bb3e8f`.
+Elle reste dans `work/` ; aucune dalle ASC brute n’est publiée. Seize dalles de
+5 × 5 km couvrent Nantes et une marge : colonnes 0345/0350/0355/0360,
+lignes 6685/6690/6695/6700. Les données ASC sont à **5 m**, sans CRS incorporé ;
+la livraison atteste **RGF93 / Lambert-93 (EPSG:2154)** et les altitudes normales
+**NGF-IGN69 (EPSG:5720)**. NoData : **−99999**, explicitement rejeté ; aucune
+altitude aléatoire ou substitution silencieuse si la source manque.
+
+La projection locale OSM est conservée. Chaque point local est reconverti en
+WGS84 puis Lambert-93 avec PROJ ; une interpolation bilinéaire tient compte du
+centre des pixels IGN. Les altitudes sont arrondies au centimètre pour le stockage,
+sans prétendre à une précision centimétrique. Les sommets terrestres préparés vont
+de **−0,79 à 63,40 m NGF-IGN69** ; ce sont les extrema des échantillons utilisés,
+pas une recherche exhaustive des extrema du raster. Exemples sur la source :
+Butte Sainte-Anne ≈ **32,43 m**, Parc des Chantiers ≈ **6,36 m**.
+
+`public/nantes/terrain/` contient un manifeste, une vue générale et **un seul fichier
+par tuile**, partagé entre les trois LOD des bâtiments. Chaque tuile comprend une
+grille d’altitude de **10 m** avec halo, les socles calculés sur le MNT natif,
+un tableau commun de sommets et trois index : maillages de **20/50/100 m**,
+adaptés au contour communal et aux berges OSM. Les bords de tuile sont subdivisés
+sur la même grille globale de 10 m aux trois niveaux ; les normales sont dérivées
+d’un champ commun lissé de la vue générale pour éviter les différences d’éclairage.
+Le terrain général de 100 m reste disponible jusqu’à remplacement par les tuiles.
+Le masque existant retire simultanément terrain et objets généraux dans les zones
+remplacées. Les découpes sont stabilisées au centimètre ; aucun socle rectangulaire.
+
+Les fondations restent horizontales, au maximum du MNT échantillonné sur les bords
+et, pour les grandes empreintes, sur une grille intérieure de 10 m. Un soubassement
+rejoint le minimum local ; corps, toits, étages et fenêtres sont translatés ensemble,
+sans modifier les coordonnées horizontales ni les hauteurs hors sol OSM/procédurales.
+Ces socles sont une interprétation constructive, pas des fondations relevées.
+Les rues sont densifiées à 10/20/50 m selon le LOD et drapées sur les triangles
+réellement affichés ; places et parcs sont subdivisés avant drapage. Arbres, murs,
+repères et cible de caméra suivent le relief ; la caméra reste au moins 3 m
+au-dessus de l’altitude échantillonnée à sa position horizontale.
+
+Les ponts et `layer>0` disposent d’un tablier horizontal **estimé** à partir du
+maximum du MNT sur leur tracé, au moins 2 m au-dessus des eaux traversées. Ce choix
+conservateur évite de les coller au lit de rivière ; il ne restitue ni les piles,
+ni les arches, ni les pentes exactes. Les tunnels et `layer<0` sont omis plutôt que
+plaqués sur le sol. Les ouvrages mal renseignés dans OSM restent une limite.
+
+Les eaux connectées utilisent un niveau commun, médiane des échantillons du MNT
+dans leurs polygones. Il est constant, sans bosses ni simulation de marée. Le terrain
+et les parcs sont découpés autour des empreintes d’eau précises, conservées à tous
+les LOD ; l’eau de la V4A reste animée par ses normales et sa couleur, sans déplacer
+sa surface. Cette approximation ne décrit pas les niveaux hydrologiques actuels,
+ni toutes les différences amont/aval, les écluses ou les variations de la Loire.
+
+Le cache CPU d’altitude est séparé et borné à **24 tuiles**, avec requêtes partagées
+entre LOD, annulation quand aucun lecteur ne reste et rejet des réponses tardives.
+Les nouveaux buffers terrain participent au budget GPU existant ; géométries et
+matériaux sont libérés avec les autres objets. Aucun service d’altitude n’est appelé
+par le navigateur. Les assets utilisent tous le préfixe GitHub Pages.
+
+### Validation et coût V4B
+
+**19 481 049 octets supplémentaires** de relief statique : 17 222 475 octets
+pour les 329 tuiles, 2 217 963 pour la vue générale et le manifeste.
+220 397 sommets partagés dans les fichiers de tuiles ; 343 047 / 97 215 /
+64 034 triangles terrestres au total pour proche/moyen/lointain. Les surfaces,
+fondations et routes ajoutent leurs propres buffers, regroupés comme précédemment.
+Le module passe de 637,6 à **644,7 ko minifiés / 168,0 ko gzip**, sans dépendance
+runtime supplémentaire. L’avertissement Vite > 500 ko demeure.
+
+Installation propre, TypeScript, **76 tests Vitest**, **18 tests Python** et build
+vérifiés. Les tests couvrent interpolation native et navigateur, NoData/source
+absente, projection/origine, couverture/tailles, socles complets, géométrie finie
+avec orientation valide en Float32 WebGL, trous, identité des bords des trois LOD
+et des grilles avec halo entre voisins, niveaux d’eau communs, tabliers/tunnels,
+repères, requêtes partagées/annulations, LRU et destruction. Une seconde préparation
+complète donne **les mêmes octets pour les 331 fichiers** ; ils sont également
+identiques dans le build. Les **989 fichiers OSM existants sont inchangés**.
+
+Chromium headless, GPU logiciel : parcours de Chantenay, Île de Nantes, Nantes Nord
+et château à 1 440 × 1 100 ; Chantenay et château à 390 × 844 simulés. Vue générale,
+jour, 22 h et rotation testés ; captures inspectées. Un second passage contrôle
+les angles bas de Chantenay et les berges de l’Erdre après déplacement vers l’est. Fermeture pendant chargement
+sans dessin ni rAF restant, au maximum un rAF applicatif en attente, aucun asset
+manquant ou erreur applicative ; aucun téléchargement IGN depuis le navigateur.
+Avec réduction des animations, la scène revient au repos.
+
+Le premier parcours a donné **13 à 68 s** entre sélection et retour au repos sur
+ordinateur, **13 à 15 s** sur mobile simulé, incluant chargement, génération et rendu
+logiciel ; une préparation Python tournait aussi pendant une partie de ce passage.
+Ces chiffres ne sont pas un benchmark comparatif ni des performances sur GPU physique.
+La génération reste synchrone par tuile ; terrain, drapage et fondations accroissent
+son coût. Les scènes détaillées demeurent lourdes sur le GPU logiciel. Au cadrage oblique
+de Chantenay : 16 tuiles, 64,1 Mio de buffers estimés et environ 1,01 million de
+triangles dans le dessin mesuré, ombres comprises ; le budget de 96 Mio est respecté.
+
+Limites : édition du MNT 2022 différente de l’état OSM 2026, précision des acquisitions
+variable, détails du terrain de moins de 20 m non représentés par le maillage proche,
+petites variations au changement de LOD, socles interprétés et parfois élevés sur
+une pente, plans d’eau constants, ouvrages approximatifs, absence de murs de quai
+ou berges modélisés spécifiquement. La vue générale et les normales sont plus
+lissées que le terrain proche. Pas de validation sur Safari, GPU physique ou
+téléphone réel ; le contrôle de caméra ne constitue pas une collision complète
+avec les bâtiments ni la simulation de déplacements au sol.
+
+### Reproduction du relief
+
+Installer les dépendances Python ci-dessus ; Rasterio, NumPy, pyproj et py7zr
+servent uniquement à la préparation et aux tests. La commande suivante télécharge
+**explicitement une seule archive officielle**, vérifie son SHA-256 et extrait
+seulement les dalles utiles :
+
+```sh
+work/nantes-python/bin/python -B src/playgrounds/nantes-3d/scripts/prepare_terrain.py --download
+# Puis régénération hors réseau avec les mêmes entrées :
+work/nantes-python/bin/python -B src/playgrounds/nantes-3d/scripts/prepare_terrain.py
+# Sortie de comparaison :
+work/nantes-python/bin/python -B src/playgrounds/nantes-3d/scripts/prepare_terrain.py --output work/nantes-terrain-verification
+# Équivalent avec les dépendances dans l’environnement courant :
+npm run nantes:prepare-terrain
+npm run nantes:test-data
+```
+
+`--archive`, `--source` et `--output` permettent des chemins différents. Pour une
+nouvelle édition, vérifier le catalogue IGN, ses CRS, résolution, NoData et licence,
+modifier l’URL/édition et le SHA attendu, renouveler les métadonnées originales et
+la date d’extraction ; régénérer **tous** les assets terrain après les données OSM.
+La sélection départementale est actuellement adaptée à Nantes ; pour une autre
+commune, adapter sélection de dalles, origine et emprise. Le moteur de génération
+reçoit la source, les assets géographiques et la destination indépendamment.
+
 ## Validation V4A
 
 Installation propre (`npm ci`), TypeScript, **67 tests Vitest**, **10 tests Python**
@@ -327,7 +468,8 @@ le pilote, les textures et les autres allocations. Les pauses restent importante
 sur ce GPU logiciel ; la génération synchrone des tuiles denses est une limite V3.
 
 
-Limites : terrain plat ; relief, ponts, tunnels et niveaux superposés non reconstruits ;
+Limites géographiques actuelles : précision variable du MNT ; ponts approximatifs,
+tunnels omis et niveaux superposés incomplets ;
 hauteurs largement estimées ; monuments interprétés ; formes de toit approchées ;
 jonctions de chaussées estimées ; limites de tuiles parfois perceptibles au changement
 de LOD ; vue générale agrégée ; génération d’une tuile dense sur le thread principal.

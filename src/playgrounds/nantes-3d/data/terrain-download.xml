@@ -1,0 +1,26 @@
+<?xml version='1.0' encoding='UTF-8' standalone='yes'?>
+<feed xmlns:georss="http://www.georss.org/georss" xmlns:gpf_dl="https://data.geopf.fr/annexes/ressources/xsd/gpf_dl.xsd" xmlns="http://www.w3.org/2005/Atom" xmlns:inspire_dls="http://inspire.ec.europa.eu/schemas/inspire_dls/1.0" xml:lang="en" gpf_dl:page="1" gpf_dl:pagesize="10" gpf_dl:pagecount="1" gpf_dl:totalentries="1">
+  <title>RGEALTI_2-0_5M_ASC_LAMB93-IGN69_D044_2022-12-20</title>
+  <subtitle>RGEALTI_2-0_5M_ASC_LAMB93-IGN69_D044_2022-12-20</subtitle>
+  <id>https://data.geopf.fr/telechargement/resource/RGEALTI/RGEALTI_2-0_5M_ASC_LAMB93-IGN69_D044_2022-12-20</id>
+  <updated>2023-10-23T14:59:00+01:00</updated>
+  <link href="https://data.geopf.fr/telechargement/resource/RGEALTI/RGEALTI_2-0_5M_ASC_LAMB93-IGN69_D044_2022-12-20?lang=fr" hreflang="fr" rel="alternate" type="application/atom+xml" title="RGEALTI_2-0_5M_ASC_LAMB93-IGN69_D044_2022-12-20"/>
+  <link href="https://data.geopf.fr/telechargement/resource/RGEALTI/RGEALTI_2-0_5M_ASC_LAMB93-IGN69_D044_2022-12-20" rel="self" type="application/atom+xml" title="This document"/>
+  <link href="https://data.geopf.fr/telechargement/resource/RGEALTI" rel="up" type="application/atom+xml"/>
+  <gpf_dl:zone term="D044" label="D044 Loire-Atlantique"/>
+  <gpf_dl:format term="ASC" label="ASCII (American Standard Code for Information Interchange)"/>
+  <gpf_dl:editionDate>2022-12-20</gpf_dl:editionDate>
+  <entry>
+    <link href="https://data.geopf.fr/telechargement/download/RGEALTI/RGEALTI_2-0_5M_ASC_LAMB93-IGN69_D044_2022-12-20/RGEALTI_2-0_5M_ASC_LAMB93-IGN69_D044_2022-12-20.7z" rel="alternate" type="application/x-7z-compressed" gpf_dl:length="313638699"/>
+    <id>https://data.geopf.fr/telechargement/download/RGEALTI/RGEALTI_2-0_5M_ASC_LAMB93-IGN69_D044_2022-12-20/RGEALTI_2-0_5M_ASC_LAMB93-IGN69_D044_2022-12-20.7z</id>
+    <content>7742006e1b9dd4a1ca2057a4e40cda7b</content>
+    <gpf_dl:mime_type>application/octet-stream</gpf_dl:mime_type>
+    <gpf_dl:mime_type>application/pdf</gpf_dl:mime_type>
+    <gpf_dl:mime_type>application/x-shapefile</gpf_dl:mime_type>
+    <gpf_dl:mime_type>application/xml</gpf_dl:mime_type>
+    <gpf_dl:mime_type>image/x-aaigrid</gpf_dl:mime_type>
+    <gpf_dl:mime_type>image/x-prj</gpf_dl:mime_type>
+    <gpf_dl:mime_type>text/html</gpf_dl:mime_type>
+    <gpf_dl:mime_type>text/plain</gpf_dl:mime_type>
+  </entry>
+</feed>

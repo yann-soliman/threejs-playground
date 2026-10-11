@@ -4,6 +4,9 @@ Une collection légère d’expériences 3D interactives et indépendantes, réa
 
 L’interface utilise un thème clair et un accueil minimal : titre, cartes des expériences et lien GitHub.
 
+La présentation retenue est une galerie de cartes compactes, avec une scène
+large pour chaque expérience. Voir [les choix d’interface](docs/INTERFACE.md).
+
 Site cible : https://yann-soliman.github.io/threejs-playground/
 
 ## Installation

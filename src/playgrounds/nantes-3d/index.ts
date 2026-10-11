@@ -8,9 +8,10 @@ import type { Cleanup } from '../../shared/playground';
 export function mount(container: HTMLElement): Cleanup {
   container.innerHTML = `
     <section class="experience" aria-labelledby="nantes-title">
-      <a class="back-link" href="#/">← Playgrounds</a>
+      <a class="back-link" href="#/"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M19 12H5m6-6-6 6 6 6"/></svg> Expériences</a>
       <div class="experience-heading"><h1 id="nantes-title">Nantes 3D</h1><span class="badge">En préparation</span></div>
-      <div class="viewport" aria-label="Scène 3D de préparation"><p class="viewport-note">Scène d’attente · Données OpenStreetMap à venir</p></div>
+      <p class="experience-summary">Scène d’attente. Données OpenStreetMap à venir.</p>
+      <div class="viewport" role="img" aria-label="Scène 3D de préparation : grille au sol et repère circulaire. Les données de Nantes ne sont pas encore présentes."></div>
       <p class="controls-help">Glisser pour tourner · Molette ou pincement pour zoomer</p>
     </section>`;
   const viewport = container.querySelector<HTMLElement>('.viewport')!;

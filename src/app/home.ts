@@ -4,7 +4,7 @@ import { playgroundUrl } from './router';
 export function renderHome(container: HTMLElement): void {
   container.innerHTML = `
     <section class="collection" aria-labelledby="home-title">
-      <h1 id="home-title">Playgrounds</h1>
+      <h1 id="home-title">Expériences</h1>
       <div class="cards"></div>
     </section>`;
   const cards = container.querySelector('.cards')!;
@@ -28,14 +28,17 @@ export function renderHome(container: HTMLElement): void {
     const badge = document.createElement('span');
     badge.className = 'badge';
     badge.textContent = entry.status;
-    const title = document.createElement('h3');
+    const title = document.createElement('h2');
     title.textContent = entry.title;
     const description = document.createElement('p');
     description.textContent = entry.description;
     const heading = document.createElement('div');
     heading.className = 'card-heading';
     heading.append(title, badge);
-    content.append(heading, description);
+    const action = document.createElement('span');
+    action.className = 'card-action';
+    action.innerHTML = 'Ouvrir la scène <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>';
+    content.append(heading, description, action);
     card.append(visual, content);
     cards.append(card);
   }

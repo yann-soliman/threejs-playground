@@ -55,3 +55,7 @@
   .nantes-poi-picker select { flex: 1; min-width: 0; max-width: 240px; }
   .nantes .nantes-compass { width: 72px; height: 72px; top: 12px; left: 12px; }
 }
+.nantes-loading { top: auto; bottom: 36px; left: 12px; width: auto; max-width: calc(100% - 76px); padding: 7px 10px; font-size: 11px; text-align: left; pointer-events: none; }
+.nantes-diagnostics { margin-top: 12px; font-size: 11px; color: var(--muted); }
+.nantes-diagnostics summary { cursor: pointer; min-height: 30px; width: fit-content; }
+.nantes-diagnostics output { display: block; padding: 10px; background: #eef2eb; border-radius: 6px; line-height: 1.8; }

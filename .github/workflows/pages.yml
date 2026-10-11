@@ -30,6 +30,14 @@ jobs:
         run: npm run typecheck
       - name: Exécuter les tests
         run: npm test
+      - name: Configurer Python pour Nantes
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Installer les outils de préparation Nantes
+        run: pip install -r src/playgrounds/nantes-3d/scripts/requirements.txt
+      - name: Vérifier les données géographiques Nantes
+        run: npm run nantes:test-data
       - name: Construire la production
         run: npm run build
       - name: Préparer GitHub Pages

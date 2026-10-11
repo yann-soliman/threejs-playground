@@ -13,13 +13,15 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "nantes:prepare": "python3 -B src/playgrounds/nantes-3d/scripts/prepare.py",
-    "nantes:test-data": "python3 -B src/playgrounds/nantes-3d/scripts/test_prepare.py"
+    "nantes:prepare": "python3 -B src/playgrounds/nantes-3d/scripts/prepare_city.py",
+    "nantes:test-data": "python3 -B -m unittest discover -s src/playgrounds/nantes-3d/scripts -p \"test_*.py\"",
+    "nantes:prepare-legacy": "python3 -B src/playgrounds/nantes-3d/scripts/prepare.py"
   },
   "dependencies": {
     "three": "^0.186.1"
   },
   "devDependencies": {
+    "@types/node": "^26.6.5",
     "@types/three": "^0.186.0",
     "typescript": "^7.0.2",
     "vite": "^8.3.4",

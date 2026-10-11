@@ -1,13 +1,16 @@
 import {
-  ACESFilmicToneMapping, Color, DirectionalLight, Fog, HemisphereLight,
+  ACESFilmicToneMapping, BufferGeometry, Color, DirectionalLight, Fog, HemisphereLight, InstancedMesh, Mesh,
   PCFSoftShadowMap, PerspectiveCamera, Scene, Vector3, WebGLRenderer,
 } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import type { Cleanup } from '../../shared/playground';
 import { createCity } from './city';
 import type { CityModel } from './city';
+import { createOverview } from './overview';
+import { selectTiles, TileLoader } from './tiles';
+import type { CityManifest, TileResource } from './tiles';
 import type { CityData } from './types';
-import { aerialPose, CameraNavigator, cameraPosition, northPose, readCameraPose, shortestAngle } from './navigation';
+import { aerialPose, cityOverviewPose, CameraNavigator, cameraPosition, northPose, readCameraPose, shortestAngle } from './navigation';
 import type { CameraPose } from './navigation';
 import { pointsOfInterest, selectPointOfInterest } from './pois';
 import type { PoiSelection } from './pois';
@@ -17,12 +20,12 @@ export function mount(container: HTMLElement): Cleanup {
   container.innerHTML = `
     <section class="experience nantes" aria-labelledby="nantes-title">
       <a class="back-link" href="#/">← Expériences</a>
-      <div class="experience-heading"><h1 id="nantes-title">Nantes 3D</h1><span class="badge">Première exploration</span></div>
-      <p class="experience-summary">Bouffay, le château et leurs alentours. Une promenade au-dessus de la ville, dessinée par OpenStreetMap.</p>
+      <div class="experience-heading"><h1 id="nantes-title">Nantes 3D</h1><span class="badge">Toute la ville</span></div>
+      <p class="experience-summary">Du centre historique aux quartiers de Nantes. Explorez la commune entière, dessinée par OpenStreetMap.</p>
       <div class="nantes-toolbar" aria-label="Vues de la ville">
         <div class="nantes-views"><button type="button" data-view="aerial" aria-pressed="true">Vue d’ensemble</button><button type="button" data-view="castle" aria-pressed="false" disabled>Le château</button><button type="button" data-view="bouffay" aria-pressed="false" disabled>Bouffay</button></div>
         <label class="nantes-poi-picker"><span>Lieux à explorer</span><select aria-label="Choisir un point d’intérêt" disabled><option value="">Choisir un lieu…</option></select></label>
-        <span class="nantes-extent">846 × 801 m <span aria-hidden="true">·</span> centre historique</span>
+        <span class="nantes-extent">Commune de Nantes <span aria-hidden="true">·</span> chargement progressif</span>
       </div>
       <div class="viewport nantes-viewport" tabindex="0" role="region" aria-label="Maquette 3D interactive de Nantes" aria-describedby="nantes-help">
         <p class="nantes-loading" role="status">Préparation de la maquette…</p>
@@ -41,8 +44,9 @@ export function mount(container: HTMLElement): Cleanup {
       <p class="controls-help" id="nantes-help">Glisser pour tourner · Molette pour zoomer · Clic droit ou deux doigts pour déplacer · Clavier : flèches, +, −, R pour réinitialiser et N pour le nord</p>
       <div class="nantes-place" hidden><span><strong class="nantes-place-name"></strong><a class="nantes-place-link" target="_blank" rel="noopener noreferrer">Voir sur OpenStreetMap ↗</a></span><button type="button" data-action="clear-poi" aria-label="Masquer le repère du lieu" title="Masquer le repère">×</button></div>
       <span class="nantes-sr-only nantes-announcement" role="status"></span>
-      <div class="nantes-caption"><span><strong>Bouffay & Château des ducs de Bretagne</strong><br>Empreintes réelles, architecture interprétée</span><span class="nantes-stats" role="status"></span></div>
-      <details class="nantes-data"><summary>À propos de cette maquette</summary><p class="nantes-provenance"></p><p>Les empreintes, rues, places, espaces verts et arbres proviennent d’OpenStreetMap. Les hauteurs et toitures utilisent les attributs disponibles ; les autres dimensions, fenêtres, matériaux et détails de façade sont estimés de manière déterministe. Le relief est plat et les formes de toit sont approximatives.</p><p><a href="https://www.openstreetmap.org/#map=16/47.2156/-1.5524" target="_blank" rel="noopener noreferrer">Voir ce quartier sur OpenStreetMap ↗</a> · <a href="https://opendatacommons.org/licenses/odbl/1-0/" target="_blank" rel="noopener noreferrer">Licence des données ODbL ↗</a></p></details>
+      <div class="nantes-caption"><span><strong>Nantes · Loire & Erdre</strong><br>Empreintes réelles, architecture interprétée</span><span class="nantes-stats" role="status"></span></div>
+      <details class="nantes-diagnostics"><summary>Diagnostic du rendu</summary><output></output></details>
+      <details class="nantes-data"><summary>À propos de cette maquette</summary><p class="nantes-provenance"></p><p>Les empreintes, rues, places, espaces verts et arbres proviennent d’OpenStreetMap. Les hauteurs et toitures utilisent les attributs disponibles ; les autres dimensions, fenêtres, matériaux et détails de façade sont estimés de manière déterministe. Le relief est plat et les formes de toit sont approximatives. La vue générale agrège la densité bâtie ; les empreintes réelles apparaissent en zoomant.</p><p><a href="https://www.openstreetmap.org/#map=16/47.2156/-1.5524" target="_blank" rel="noopener noreferrer">Voir Nantes sur OpenStreetMap ↗</a> · <a href="https://opendatacommons.org/licenses/odbl/1-0/" target="_blank" rel="noopener noreferrer">Licence des données ODbL ↗</a></p></details>
     </section>`;
   const viewport = container.querySelector<HTMLElement>('.viewport')!;
   const status = container.querySelector<HTMLElement>('.nantes-loading')!;
@@ -63,7 +67,7 @@ export function mount(container: HTMLElement): Cleanup {
   viewport.prepend(renderer.domElement);
   const scene = new Scene();
   scene.background = new Color('#e7ece5');
-  scene.fog = new Fog('#e7ece5', 1600, 3200);
+  scene.fog = new Fog('#e7ece5', 20000, 65000);
   scene.add(new HemisphereLight('#fff8e7', '#919987', 2.5));
   const sun = new DirectionalLight('#fff1d5', 3);
   sun.position.set(-350, 700, 250);
@@ -74,10 +78,11 @@ export function mount(container: HTMLElement): Cleanup {
   sun.shadow.camera.near = 1; sun.shadow.camera.far = 1800;
   sun.shadow.normalBias = 0.4;
   sun.shadow.bias = -0.00015;
-  scene.add(sun);
-  const camera = new PerspectiveCamera(42, 1, 1, 4000);
+  scene.add(sun, sun.target);
+  renderer.shadowMap.autoUpdate = false;
+  const camera = new PerspectiveCamera(42, 1, 2, 100000);
   const controls = new OrbitControls(camera, renderer.domElement);
-  controls.minDistance = 50; controls.maxDistance = 2600;
+  controls.minDistance = 50; controls.maxDistance = 50000;
   controls.maxPolarAngle = Math.PI / 2.25;
   controls.screenSpacePanning = false;
   const compass = container.querySelector<HTMLElement>('.nantes-compass')!;
@@ -91,20 +96,67 @@ export function mount(container: HTMLElement): Cleanup {
     picker.append(option);
   }
   let disposed = false;
-  let model: CityModel | undefined;
-  let cityData: CityData | undefined;
+  let manifest: CityManifest | undefined;
+  let overview: ReturnType<typeof createOverview> | undefined;
+  let loader: TileLoader<CityModel & TileResource> | undefined;
+  let destination: Vector3 | undefined;
+  let tileTimer: number | undefined;
+  let renderTimer: number | undefined;
+  let sceneDirty = false;
+  let shadowCenter = new Vector3(Infinity, 0, Infinity);
+  const diagnostics = container.querySelector<HTMLDetailsElement>('.nantes-diagnostics')!;
+  let lastDraw = 0;
+  let movementFps = 0;
+  let tileFailures = 0;
+  const base = `${import.meta.env.BASE_URL}nantes/`;
+  const updateTiles = (): void => {
+    tileTimer = undefined;
+    if (disposed || !manifest || !loader) return;
+    loader.update(selectTiles(manifest, camera, controls.target, loader.levels, destination, aspect() < 1 ? 10 : 16));
+  };
+  const scheduleTiles = (): void => {
+    if (tileTimer === undefined && !disposed) tileTimer = window.setTimeout(updateTiles, 80);
+  };
   let selection: PoiSelection | undefined;
   let compassHeading = 0;
   let previousHeading = 0;
   const markerProjection = new Vector3();
+  const refreshDiagnostics = (): void => {
+    if (diagnostics.open && loader) {
+      const info = loader.info;
+      diagnostics.querySelector('output')!.textContent = `${navigator.active ? `Cadence instantanée : ${movementFps.toFixed(0)} images/s` : 'Au repos : rendu à la demande'} · ${info.active} tuiles · ${info.pending} requêtes · LOD proche/moyen/lointain : ${info.lod.near}/${info.lod.medium}/${info.lod.far} · ${renderer.info.render.calls} appels de dessin · ${renderer.info.render.triangles.toLocaleString('fr-FR')} triangles · buffers estimés : ${(info.bytes / 1048576).toFixed(1)} Mio (hors pilote GPU)`;
+    }
+  };
+  const requestDraw = (): void => {
+    if (renderTimer === undefined && !disposed) renderTimer = window.setTimeout(draw, 32);
+  };
   const draw = (): void => {
     if (disposed) return;
+    if (renderTimer !== undefined) window.clearTimeout(renderTimer);
+    renderTimer = undefined;
+    sceneDirty = false;
     const heading = controls.getAzimuthalAngle();
     // Dérouler les angles évite un tour artificiel lors du passage de +π à −π.
     compassHeading += shortestAngle(previousHeading, heading);
     previousHeading = heading;
     compass.style.setProperty('--heading', `${compassHeading}rad`);
+    const distance = camera.position.distanceTo(controls.target);
+    const shadows = distance < 2400;
+    if (scene.fog instanceof Fog) { scene.fog.near = Math.max(1600, distance * 1.15); scene.fog.far = Math.max(4000, distance * 2.2); }
+    if (sun.castShadow !== shadows) { sun.castShadow = shadows; renderer.shadowMap.needsUpdate = true; }
+    if (shadows && controls.target.distanceTo(shadowCenter) > 140) {
+      shadowCenter.copy(controls.target);
+      sun.target.position.copy(controls.target);
+      sun.position.copy(controls.target).add(new Vector3(-350, 700, 250));
+      renderer.shadowMap.needsUpdate = true;
+    }
     renderer.render(scene, camera);
+    if (diagnostics.open) {
+      const now = performance.now();
+      if (navigator.active && lastDraw && now - lastDraw < 1000) movementFps = 1000 / (now - lastDraw);
+      lastDraw = now;
+      refreshDiagnostics();
+    }
     if (selection) {
       markerProjection.copy(selection.marker).project(camera);
       const visible = markerProjection.z >= -1 && markerProjection.z <= 1 && Math.abs(markerProjection.x) <= 1 && Math.abs(markerProjection.y) <= 1;
@@ -134,16 +186,20 @@ export function mount(container: HTMLElement): Cleanup {
   const clearPoi = (): void => {
     navigator.cancel();
     selection = undefined;
+    destination = undefined;
+    scheduleTiles();
     picker.value = '';
     marker.hidden = true;
     place.hidden = true;
     announcement.textContent = '';
   };
   const selectPoi = (id: string): void => {
-    if (!cityData) return;
-    const next = selectPointOfInterest(id, cityData.meta, readPose(), aspect());
+    if (!manifest) return;
+    const next = selectPointOfInterest(id, manifest.meta, readPose(), aspect());
     if (!next) return;
     selection = next;
+    destination = next.pose.target.clone();
+    updateTiles();
     picker.value = next.point.id;
     container.querySelector<HTMLElement>('.nantes-place-name')!.textContent = next.point.name;
     container.querySelector<HTMLAnchorElement>('.nantes-place-link')!.href = next.url;
@@ -157,18 +213,20 @@ export function mount(container: HTMLElement): Cleanup {
     if (view !== 'aerial') { selectPoi(view); return; }
     clearPoi();
     activeView('aerial');
-    moveTo(aerialPose(aspect()));
+    moveTo(manifest ? cityOverviewPose(manifest.bounds, aspect()) : aerialPose(aspect()));
   };
   const orientNorth = (): void => moveTo(northPose(readPose()));
   const manualInteraction = (): void => {
     navigator.cancel();
+    destination = undefined;
+    scheduleTiles();
     activeView('');
   };
   const resize = (): void => {
     if (disposed || !viewport.clientWidth || !viewport.clientHeight) return;
     renderer.setSize(viewport.clientWidth, viewport.clientHeight);
     camera.aspect = aspect();
-    camera.updateProjectionMatrix(); draw();
+    camera.updateProjectionMatrix(); draw(); scheduleTiles();
   };
   const zoom = (factor: number): void => {
     manualInteraction();
@@ -207,30 +265,68 @@ export function mount(container: HTMLElement): Cleanup {
   picker.addEventListener('change', selectChange);
   viewport.addEventListener('keydown', keydown);
   controls.addEventListener('start', manualInteraction);
-  controls.addEventListener('change', draw);
+  const cameraChanged = (): void => { draw(); scheduleTiles(); };
+  const diagnosticChanged = (): void => { lastDraw = 0; draw(); };
+  diagnostics.addEventListener('toggle', diagnosticChanged);
+  controls.addEventListener('change', cameraChanged);
   const observer = new ResizeObserver(resize);
   observer.observe(viewport);
   // Premier cadrage immédiat au montage ; toutes les actions suivantes sont animées.
   applyPose(aerialPose(aspect())); resize();
   const request = new AbortController();
-  // Vite émet une ressource hashée sous le base GitHub Pages ; aucune API au runtime.
-  void fetch(new URL('./data/city.json', import.meta.url), { signal: request.signal })
-    .then(async (response) => {
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      return await response.json() as CityData;
-    })
-    .then((data) => {
+  const fetchData = async <T,>(url: string, signal: AbortSignal): Promise<T> => {
+    const response = await fetch(url, { signal });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return await response.json() as T;
+  };
+  void fetchData<CityManifest>(`${base}manifest.json`, request.signal)
+    .then(async (data) => {
       if (disposed) return;
-      cityData = data;
-      model = createCity(data);
+      manifest = data;
+      status.textContent = 'Préparation de la vue générale de Nantes…';
+      const general = await fetchData<CityData>(base + data.overview, request.signal);
+      if (disposed) return;
+      overview = createOverview(general, data);
+      scene.add(overview.group);
+      loader = new TileLoader({
+        fetch: (choice, signal) => fetchData<CityData>(base + choice.tile.urls[choice.lod], signal),
+        generate: async (tileData, choice, signal) => {
+          // Laisser le navigateur traiter les interactions entre deux lots de géométrie.
+          await new Promise<void>((resolve) => window.setTimeout(resolve, 0));
+          if (signal.aborted || disposed) throw new DOMException('Chargement annulé', 'AbortError');
+          const model = createCity(tileData, { lod: choice.lod, ground: false });
+          let bytes = 0;
+          const geometries = new Set<BufferGeometry>();
+          model.group.traverse((object) => {
+            if (!(object instanceof Mesh)) return;
+            if (!geometries.has(object.geometry)) {
+              geometries.add(object.geometry);
+              for (const attribute of Object.values(object.geometry.attributes)) bytes += (attribute as { array: { byteLength: number } }).array.byteLength;
+              bytes += object.geometry.index?.array.byteLength ?? 0;
+            }
+            if (object instanceof InstancedMesh) bytes += object.instanceMatrix.array.byteLength + (object.instanceColor?.array.byteLength ?? 0);
+          });
+          return { ...model, bytes };
+        },
+        attach: (resource, tile) => { scene.add(resource.group); overview?.setTile(tile, true); renderer.shadowMap.needsUpdate = true; sceneDirty = true; },
+        detach: (resource, tile) => { scene.remove(resource.group); overview?.setTile(tile, false); renderer.shadowMap.needsUpdate = true; sceneDirty = true; },
+        changed: () => {
+          if (disposed || !loader) return;
+          const info = loader.info;
+          status.hidden = info.pending === 0 && tileFailures === 0;
+          status.textContent = tileFailures ? `${tileFailures} tuile(s) indisponible(s) ; la vue générale reste visible.` : destination ? 'Affinage du quartier sélectionné…' : 'Chargement des quartiers visibles…';
+          refreshDiagnostics();
+          if (sceneDirty) requestDraw();
+        },
+        failed: (_tile, error) => { tileFailures++; console.error('Une tuile Nantes ne peut pas être chargée.', error); },
+      }, aspect() < 1 ? 48 * 1048576 : 96 * 1048576);
       picker.disabled = false;
       container.querySelectorAll<HTMLButtonElement>('[data-view]').forEach((button) => { button.disabled = false; });
-      scene.add(model.group);
+      stats.textContent = `${data.counts.buildings!.toLocaleString('fr-FR')} empreintes · ${data.tiles.length} tuiles · ${(data.areaSquareMetres / 1e6).toFixed(1)} km²`;
+      container.querySelector<HTMLElement>('.nantes-provenance')!.textContent = `Données OpenStreetMap / Geofabrik du ${new Date(data.meta.extractedAt).toLocaleDateString('fr-FR', { timeZone: 'Europe/Paris' })}. Limite communale officielle : Nantes, INSEE 44109 (API Découpage administratif). Le modèle n’est pas un relevé architectural.`;
+      applyPose(cityOverviewPose(data.bounds, aspect()));
       status.hidden = true;
-      stats.textContent = `${data.buildings.length.toLocaleString('fr-FR')} bâtiments · ${data.trees.length.toLocaleString('fr-FR')} arbres cartographiés`;
-      container.querySelector<HTMLElement>('.nantes-provenance')!.textContent = `Extraction Overpass du ${new Date(data.meta.extractedAt).toLocaleDateString('fr-FR', { timeZone: 'Europe/Paris' })}. Emprise : ${data.meta.bbox.join(', ')}. ${model.estimatedHeights} hauteurs estimées sur ${data.buildings.length} bâtiments. Le modèle n’est pas un relevé architectural.`;
-      draw();
-      renderer.shadowMap.autoUpdate = false;
+      updateTiles(); draw();
     })
     .catch((error: unknown) => {
       if (disposed) return;
@@ -247,9 +343,13 @@ export function mount(container: HTMLElement): Cleanup {
     picker.removeEventListener('change', selectChange);
     viewport.removeEventListener('keydown', keydown);
     controls.removeEventListener('start', manualInteraction);
-    controls.removeEventListener('change', draw);
+    controls.removeEventListener('change', cameraChanged);
+    diagnostics.removeEventListener('toggle', diagnosticChanged);
+    if (tileTimer !== undefined) window.clearTimeout(tileTimer);
+    if (renderTimer !== undefined) window.clearTimeout(renderTimer);
     controls.dispose();
-    model?.dispose();
+    loader?.dispose();
+    overview?.dispose();
     sun.shadow.dispose();
     scene.clear();
     renderer.dispose();

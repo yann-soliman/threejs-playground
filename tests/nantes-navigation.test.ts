@@ -147,7 +147,7 @@ describe('Transitions de caméra', () => {
 describe('Sélection des points d’intérêt', () => {
   it('utilise des identifiants uniques et des ancrages dans l’emprise OSM', () => {
     expect(new Set(pointsOfInterest.map((p) => p.id)).size).toBe(pointsOfInterest.length);
-    for (const point of pointsOfInterest) {
+    for (const point of pointsOfInterest.filter((p) => ['castle', 'bouffay', 'cathedral', 'sainte-croix'].includes(p.id))) {
       const selected = selectPointOfInterest(point.id, meta, pose(1.2), 1.7)!;
       expect(selected).toBeDefined();
       expect(selected.point.name).toBe(point.name);
@@ -172,7 +172,7 @@ describe('Sélection des points d’intérêt', () => {
     expect(cathedral.pose.target.z).toBeCloseTo(-308, 0);
   });
   it('ancre les lieux dans les géométries OSM nommées du snapshot', () => {
-    for (const point of pointsOfInterest) {
+    for (const point of pointsOfInterest.filter((p) => ['castle', 'bouffay', 'cathedral', 'sainte-croix'].includes(p.id))) {
       const building = data.buildings.find((feature) => feature.id === point.source);
       const road = data.roads.find((feature) => feature.id === point.source);
       const points = building?.rings[0] ?? road?.points;
@@ -191,7 +191,7 @@ describe('Sélection des points d’intérêt', () => {
   it('adapte le cadrage mobile et transmet une sélection à la transition', () => {
     const h = harness();
     const selected = selectPointOfInterest('castle', meta, h.current(), 0.8)!;
-    expect(selected.pose.distance).toBeGreaterThan(pointsOfInterest[0]!.distance);
+    expect(selected.pose.distance).toBeGreaterThan(pointsOfInterest.find((p) => p.id === 'castle')!.distance);
     h.navigator.moveTo(selected.pose);
     h.tick(1400);
     expect(h.current().target).toEqual(selected.pose.target);

@@ -7,3 +7,7 @@ coverage/
 !.env.example
 .DS_Store
 work/
+
+# Caches Python du traitement géographique.
+__pycache__/
+*.py[cod]

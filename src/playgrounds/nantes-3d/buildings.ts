@@ -42,15 +42,15 @@ export function buildingStyle(feature: Feature): BuildingStyle {
   const small = ['shed', 'garage', 'garages', 'roof', 'service', 'ruins', 'transportation'].includes(tags.building ?? '');
   const levelsTag = metres(tags['building:levels']);
   const heightTag = metres(tags.height);
-  const levels = Math.max(1, Math.min(18, Math.round(levelsTag ?? (small ? 1 : 3 + seed % 3))));
+  const levels = Math.max(1, Math.min(60, Math.round(levelsTag ?? (small ? 1 : 3 + seed % 3))));
   // Interprétations locales explicites, jamais enregistrées comme attributs OSM.
   const landmark = tags.building === 'cathedral' ? { height: 32, roof: 8, shape: 'gabled' }
     : tags.building === 'church' ? { height: 22, roof: 6, shape: 'gabled' }
     : tags.building !== 'ruins' && tags.name?.startsWith('Tour ') ? { height: 18, roof: 0, shape: 'flat' }
     : ['Grand Logis', 'Grand Gouvernement'].includes(tags.name ?? '') ? { height: 21, roof: 6, shape: 'gabled' } : undefined;
-  const height = Math.min(90, heightTag ?? (levelsTag ? levels * 3.15 : landmark?.height ?? (tags.building === 'ruins' ? 1.2 : levels * 3.15)));
+  const height = Math.min(250, heightTag ?? (levelsTag ? levels * 3.15 : feature.visual?.height ?? landmark?.height ?? (tags.building === 'ruins' ? 1.2 : levels * 3.15)));
   const base = Math.min(height - 0.1, metres(tags.min_height) ?? 0);
-  const roofShape = tags['roof:shape'] ?? landmark?.shape ?? (small || feature.rings.length > 1 ? 'flat' : ['gabled', 'hipped', 'mansard', 'gabled', 'flat'][seed % 5]!);
+  const roofShape = tags['roof:shape'] ?? feature.visual?.roofShape ?? landmark?.shape ?? (small || feature.rings.length > 1 ? 'flat' : ['gabled', 'hipped', 'mansard', 'gabled', 'flat'][seed % 5]!);
   const roofHeight = roofShape === 'flat' ? 0 : Math.min(height * 0.35, metres(tags['roof:height']) ?? landmark?.roof ?? (small ? 1 : 2.2 + seed % 3 * 0.65));
   const palette = ['#e4ddcd', '#d4c9b5', '#c7c1b5', '#ebe3d3', '#d9c7b4', '#d0d0c8', '#e1d3bd'];
   const materialColours: Record<string, string> = { brick: '#b98871', stone: '#d2c9b7', concrete: '#c1c4bf', glass: '#7d9696', wood: '#aa9070' };

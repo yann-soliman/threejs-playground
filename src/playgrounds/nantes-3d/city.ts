@@ -43,7 +43,10 @@ function ribbon(points: Point[], width: number, elevation: number): BufferGeomet
   return geometry;
 }
 
-export function createCity(data: CityData): CityModel {
+export type DetailLevel = 'near' | 'medium' | 'far';
+
+export function createCity(data: CityData, options: { lod?: DetailLevel; ground?: boolean } = {}): CityModel {
+  const lod = options.lod ?? 'near';
   const group = new Group();
   const geometries = new Set<BufferGeometry>();
   const materials = new Set<MeshStandardMaterial>();
@@ -67,11 +70,13 @@ export function createCity(data: CityData): CityModel {
     if (!merged) throw new Error('Assemblage des géométries impossible');
     add(merged, surface, shadows);
   }
+  if (options.ground !== false) {
   const ground = add(new BoxGeometry(data.meta.width + 6, 9, data.meta.depth + 6), material('#c5c6b4'));
   ground.position.y = -4.6;
   const top = add(new PlaneGeometry(data.meta.width, data.meta.depth), material('#d4d2c4'), false);
   top.rotation.x = -Math.PI / 2;
   top.position.y = 0.01;
+  }
 
   const surfaceParts: BufferGeometry[] = [];
   // Parcs d'abord, puis places, puis eau : ordre stable de superposition.
@@ -119,9 +124,11 @@ export function createCity(data: CityData): CityModel {
   let estimatedHeights = 0;
   for (const feature of data.buildings) {
     const style = buildingStyle(feature);
+    if (lod === 'far') { style.roofHeight = 0; style.roofShape = 'flat'; }
     if (style.heightSource === 'estimated') estimatedHeights++;
     bodies.push(buildingBody(feature, style));
     roofs.push(buildingRoof(feature, style));
+    if (lod !== 'near') continue;
     const eaves = style.height - style.roofHeight;
     const seed = seedOf(feature.id);
     for (let r = 0; r < feature.rings.length; r++) {
@@ -168,7 +175,7 @@ export function createCity(data: CityData): CityModel {
   function instances(geometry: BufferGeometry, surface: MeshStandardMaterial, count: number): InstancedMesh {
     geometries.add(geometry);
     const mesh = new InstancedMesh(geometry, surface, count);
-    group.add(mesh);
+    if (count > 0) group.add(mesh);
     return mesh;
   }
   const frames = instances(new PlaneGeometry(1, 1), material('#f0e5ce'), windowTransforms.length);
@@ -187,7 +194,7 @@ export function createCity(data: CityData): CityModel {
   frames.computeBoundingSphere(); windows.computeBoundingSphere();
 
   const trunks = instances(new CylinderGeometry(0.22, 0.32, 3, 5), material('#8b7d63'), data.trees.length);
-  const foliage = instances(new IcosahedronGeometry(1, 1), material('#ffffff'), data.trees.length);
+  const foliage = instances(new IcosahedronGeometry(1, lod === 'near' ? 1 : 0), material('#ffffff'), data.trees.length);
   foliage.castShadow = true;
   data.trees.forEach(([x, z], i) => {
     const variation = seedOf(`${x}:${z}`);

@@ -11,9 +11,15 @@ export interface PointOfInterest {
   markerHeight: number; // Au-dessus du volume procédural, sans mesure d'altitude réelle.
 }
 
-// Ancrages issus des géométries du snapshot OSM du 11 octobre 2026.
+// Monuments : snapshot V2 ; parcs et Commerce : géométries municipales V3.
+// Île et Chantenay : points de cadrage géographiques, sans mesure architecturale.
 // Le Grand Logis représente le château ; la place représente le quartier Bouffay.
 export const pointsOfInterest: readonly PointOfInterest[] = [
+  { id: 'centre', name: 'Centre-ville · Commerce', coordinates: [47.21334549, -1.55785167], source: 'relation/4764728', distance: 1050, markerHeight: 5 },
+  { id: 'ile', name: 'Île de Nantes · Parc des Chantiers', coordinates: [47.2053, -1.5642], source: 'https://www.openstreetmap.org/#map=18/47.2053/-1.5642', distance: 1300, markerHeight: 5 },
+  { id: 'chantenay', name: 'Chantenay · Butte Sainte-Anne', coordinates: [47.20282, -1.57778], source: 'https://www.openstreetmap.org/#map=18/47.20282/-1.57778', distance: 1050, markerHeight: 10 },
+  { id: 'doulon', name: 'Doulon · Parc du Grand-Blottereau', coordinates: [47.22761973, -1.50835957], source: 'way/27532467', distance: 1300, markerHeight: 5 },
+  { id: 'nord', name: 'Nantes Nord · Parc de l’Amande', coordinates: [47.2629815, -1.57511275], source: 'way/399064135', distance: 1300, markerHeight: 5 },
   { id: 'castle', name: 'Château des ducs de Bretagne', coordinates: [47.21586895, -1.549972], source: 'relation/17369788', distance: 380, markerHeight: 26 },
   { id: 'bouffay', name: 'Quartier du Bouffay', coordinates: [47.21477925, -1.5532396], source: 'way/160751210', distance: 300, markerHeight: 4 },
   { id: 'cathedral', name: 'Cathédrale Saint-Pierre-et-Saint-Paul', coordinates: [47.21837155, -1.55020215], source: 'way/28379422', distance: 380, markerHeight: 38 },

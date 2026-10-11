@@ -3,6 +3,7 @@ export interface Feature {
   id: string;
   rings: Point[][];
   tags: Record<string, string>;
+  visual?: { height: number; roofShape: string }; // Agrégats graphiques, séparés des tags OSM.
 }
 export interface CityData {
   meta: {

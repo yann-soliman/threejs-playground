@@ -106,3 +106,12 @@ export class CameraNavigator {
     this.disposed = true;
   }
 }
+
+/** Cadrage du territoire complet avec une marge adaptée au format du viewport. */
+export function cityOverviewPose(bounds: readonly number[], aspect: number): CameraPose {
+  const [west, north, east, south] = bounds as [number, number, number, number];
+  const width = east - west, depth = south - north;
+  const halfFov = 21 * Math.PI / 180;
+  const distance = Math.max(depth, width / Math.max(.1, aspect)) / (2 * Math.tan(halfFov)) * 1.3;
+  return { target: new Vector3((west + east) / 2, 0, (north + south) / 2), distance, polar: .58, azimuth: 0 };
+}

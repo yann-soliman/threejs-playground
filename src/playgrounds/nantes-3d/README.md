@@ -1,9 +1,117 @@
-# Nantes 3D — V4B
+# Nantes 3D — V5A
 
 Diorama interactif de **toute la commune de Nantes**, dans l’architecture existante
 `mount(container): Cleanup`. Three.js, TypeScript strict, HTML/CSS natifs et fichiers
 statiques ; aucun backend, clé ou appel géographique depuis le navigateur.
 Lien : `#/playgrounds/nantes-3d`.
+
+## Ville interactive — V5A
+
+**Eau.** Trois rides de longueurs différentes remplacent les deux oscillations
+très discrètes de V4A : couleur, normale et reflets évoluent sur une horloge unique
+avec coordonnées mondiales. Un filtrage par dérivées écran atténue les petites
+rides trop lointaines pour éviter le moiré. Les niveaux d’eau IGN restent fixes,
+les tuiles et la vue générale partagent la phase ; aucun déplacement de surface,
+réflexion de scène, texture téléchargée ou reconstruction par image.
+La case **Animer l’eau** conserve la phase à l’arrêt. Cadence cible de 24 images/s
+à proximité, avec le délai adaptatif existant pour les GPU lents ; ce n’est pas
+une garantie de fluidité sur tous les appareils.
+
+**Circulation.** Le sélecteur propose **Désactivée / Faible / Normale**,
+avec Normale par défaut. Plafonds : **0 / 32 / 96 véhicules** ; **0 / 16 / 48**
+si le viewport fait moins de 600 px au montage. Seules les tuiles proches/moyennes
+actives alimentent des routes dont le milieu est dans le frustum et à moins de
+1 800 m de la cible ; aucune voiture à la vue municipale ni au-delà de 2 600 m
+de distance caméra/cible. La densité effective dépend des routes admissibles.
+
+La préparation OSM conserve désormais `oneway`, `access`, `motor_vehicle`,
+`vehicle`, `junction`, `maxspeed` en plus de `lanes`, `bridge`, `tunnel` et `layer`.
+Les **989 fichiers géographiques** ont été régénérés hors réseau depuis le même
+PBF : coordonnées, empreintes, identifiants et compteurs sont inchangés.
+Les **331 assets terrain restent inchangés**. Les règles de circulation excluent
+chemins, rues piétonnes, pistes cyclables, voies de service et accès restreints,
+ainsi que tunnels et niveaux négatifs. `oneway=-1` inverse le tracé ; les sens
+uniques et ronds-points sont respectés. Une voie unique à sens unique est centrée.
+La tangente est lissée autour des virages sans remplacer le tracé OSM ; altitude
+et inclinaison longitudinale suivent les triangles routiers affichés, ou le
+niveau du tablier estimé V4B pour les ponts.
+
+Modèle déterministe et décoratif : **2 à 6 m/s**, ralenti si les dessins sont
+espacés sur GPU lent. Les voitures rapetissent sur les neuf derniers/premiers
+mètres des fragments pour masquer le recyclage des trajets incomplets.
+Pas de recherche d’itinéraire, priorité, collision, feu, réglementation horaire,
+ni respect exhaustif des limitations `maxspeed` ; ces données sont conservées
+pour de futures versions. Le changement de LOD peut modifier légèrement un tracé
+simplifié. Les règles d’accès conditionnelles et voies réversibles ne sont pas
+interprétées ; la circulation ne constitue pas une simulation de trafic réelle.
+
+Carrosserie colorée, habitacle vitré sombre et quatre roues simplifiées :
+**trois InstancedMesh pour toute la scène**, géométries/matériaux réutilisés,
+sans ombre individuelle. Aucun buffer automobile avant la première route animée.
+Retrait à la désactivation/décharge, puis libération des buffers au démontage.
+
+**Bâtiments.** Cliquer ou toucher un bâtiment ouvre une fiche et un surlignage
+ambre. La fiche indique nom ou « Bâtiment », type OSM, hauteur, niveaux,
+identifiant et lien vers l’objet OSM. Les hauteurs provenant seulement de niveaux
+ou du générateur portent **Hauteur estimée** ; les couleurs de façade, fenêtres
+et autres détails procéduraux ne sont pas présentés comme des faits. Aucun
+numéro de rue ou adresse n’est inventé ; les valeurs du type restent les tags OSM.
+
+Un index par cases de 50 m contient uniquement les empreintes des tuiles actives
+aux LOD proche/moyen. Le rayon teste les prismes géographiques candidats, y compris
+leurs cours, sans mesh détaillé ni proxy GPU par bâtiment. Les lots de bâtiments
+restent intacts ; seul le bâtiment sélectionné crée deux meshes de surlignage.
+La sélection suit un remplacement de LOD par identifiant et se ferme à la décharge
+ou avec son bouton. Déplacement de plus de 5 px, multitouch, annulation ou appui
+long ne sont pas assimilés à un clic. Le picking approxime les toits comme des
+prismes : il ne teste pas exactement les pans inclinés ni toutes les occlusions
+par le terrain ou la végétation.
+
+**Cycle de vie.** Caméra, soleil, eau et voitures partagent toujours un seul rAF.
+L’onglet masqué et le viewport hors écran suspendent tout ; fermeture : requêtes,
+écouteurs, index, sélection, instances, matériaux et géométries libérés.
+`prefers-reduced-motion` fige l’eau, désactive circulation/lecture et conserve les
+changements manuels. Eau, lecture et circulation désactivées : rendu au repos.
+Le diagnostic ajoute véhicules, appels circulation et état de l’eau à la cadence
+et aux métriques existantes. Les buffers automobiles fixes ne sont pas inclus
+dans l’estimation du cache de tuiles ; ils ajoutent moins de 30 ko au plafond de 96.
+
+### Vérifications V5A
+
+Installation propre, TypeScript, **85 tests Vitest**, **19 tests Python** et build
+réussis. Tests ciblés : restrictions/sens uniques, interpolation/virages/altitudes,
+ponts, limites de densité, retrait et disposal, cartes et champs OSM, estimations,
+rayons/cours, glissement/appui long, LOD/décharge, plus régressions V2/V3/V4.
+Les restrictions restent identiques dans les trois LOD géographiques.
+Les URLs publiques continuent à utiliser `import.meta.env.BASE_URL`.
+
+Les nouveaux tags ajoutent **1 130 712 octets** aux données OSM ; aucun nouveau
+asset externe, moteur ou dépendance runtime. Le module atteint **657,3 ko minifiés / 172,5 ko gzip**, soit environ 12,6 ko
+minifiés supplémentaires ; l’avertissement Vite > 500 ko demeure. Les scènes de plus d’un million
+de triangles restent coûteuses sur le GPU logiciel : 24 images/s est une cible,
+pas une performance vérifiée sur GPU physique. Les mesures et captures ci-dessous
+concernent Chromium logiciel uniquement, pas Safari ou un téléphone réel.
+
+Chromium headless en production, ordinateur **1 440 × 1 100** et mobile simulé
+**390 × 844** : sélection par clic/tap, fermeture, glissement sans sélection,
+cadrages Île/château, nuit, densités, masquage et fermeture pendant chargement
+vérifiés ; captures inspectées. Aucun asset manquant, erreur applicative ou
+débordement horizontal ; au plus un rAF applicatif, aucun au repos ou après fermeture.
+
+À caméra fixe près de la Loire, **62,6 % de 98 654 pixels identifiés comme eau**
+changent de plus de 2 unités RVB entre deux captures animées (différence maximale
+par pixel, moyenne 5,59/255). L’eau désactivée donne deux captures **identiques**.
+La détection par couleur est approximative ; les images ont aussi été inspectées.
+Voitures seules : 32 puis 96 instances, **119 puis 286 pixels** changent de plus
+de 5 unités entre captures, pour **trois appels de dessin** dans les deux densités.
+
+Sur le GPU logiciel, intervalle médian entre dessins : **3,011 s pour l’eau**,
+**3,009 s / 3,010 s pour circulation faible/normale**, soit environ **0,3 image/s**.
+Ce sont des séquences courtes comprenant les captures, sans prétendre à un
+benchmark stable ; elles ne démontrent pas une fluidité sur GPU physique.
+Au cadrage de circulation : 16 tuiles, environ 1,11 million de triangles et 60,2 Mio
+de buffers de tuiles estimés. La scène reste lourde ; la cadence adaptative et le
+plafonnement du déplacement limitent les sauts, mais l’animation est saccadée ici.
 
 ## Couverture et provenance
 
@@ -27,7 +135,7 @@ Lien : `#/playgrounds/nantes-3d`.
   des suffixes ; ces compteurs décrivent les géométries produites, pas les adresses.
 - **329 tuiles de 500 × 500 m**, trois fichiers par tuile. La superficie projetée
   est d’environ **65,6 km²** ; ce calcul graphique n’est pas une superficie cadastrale.
-- Environ **69,6 Mo** de données OSM déployées : 67,5 Mo de tuiles, 2,0 Mo de vue générale
+- Environ **70,7 Mo** de données OSM déployées : 68,5 Mo de tuiles, 2,1 Mo de vue générale
   et le manifeste, auxquels s’ajoutent **19,48 Mo de relief IGN** en V4B.
   Les tuiles ne sont pas toutes téléchargées au démarrage.
 

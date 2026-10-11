@@ -32,7 +32,7 @@ export function windowMaterial(geometry: BufferGeometry, lights: number[], unifo
 }
 
 export function waterMaterial(uniforms: AtmosphereUniforms): MeshStandardMaterial {
-  const material = new MeshStandardMaterial({ color: '#78aeb0', roughness: .38, metalness: .12 });
+  const material = new MeshStandardMaterial({ color: '#78aeb0', roughness: .28, metalness: .16 });
   material.onBeforeCompile = (shader) => {
     shader.uniforms.waterTime = uniforms.time;
     shader.uniforms.waterDay = uniforms.day;
@@ -41,13 +41,22 @@ export function waterMaterial(uniforms: AtmosphereUniforms): MeshStandardMateria
     shader.vertexShader = shader.vertexShader.replace('#include <worldpos_vertex>', '#include <worldpos_vertex>\nwaterPosition = (modelMatrix * vec4(transformed, 1.0)).xz;');
     shader.fragmentShader = 'uniform float waterTime; uniform float waterDay; uniform float waterWarmth; varying vec2 waterPosition;\n' + shader.fragmentShader;
     shader.fragmentShader = shader.fragmentShader.replace('#include <color_fragment>', `#include <color_fragment>
-float ripple = sin(dot(waterPosition, vec2(0.19, 0.12)) + waterTime * 0.75) * sin(dot(waterPosition, vec2(-0.08, 0.23)) - waterTime * 0.5);
-diffuseColor.rgb *= mix(0.60, 1.0, waterDay) * (0.96 + ripple * 0.04);
+float flow = sin(dot(waterPosition, vec2(0.013, -0.017)) + waterTime * 0.12) * 0.7;
+float waveA = dot(waterPosition, vec2(0.23, 0.11)) + waterTime * 1.35 + flow;
+float waveB = dot(waterPosition, vec2(-0.15, 0.39)) - waterTime * 0.95;
+float waveC = dot(waterPosition, vec2(0.08, -0.13)) + waterTime * 0.63;
+float filterA = 1.0 - smoothstep(0.6, 2.0, fwidth(waveA));
+float filterB = 1.0 - smoothstep(0.6, 2.0, fwidth(waveB));
+float filterC = 1.0 - smoothstep(0.6, 2.0, fwidth(waveC));
+float ripple = sin(waveA) * 0.55 * filterA + sin(waveB) * 0.3 * filterB + sin(waveC) * 0.15 * filterC;
+float glint = pow(max(0.0, ripple), 4.0);
+diffuseColor.rgb *= mix(0.60, 1.0, waterDay) * (0.91 + ripple * 0.12);
+diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.64, 0.79, 0.77), glint * 0.17 * waterDay);
 diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.34, 0.24, 0.16), waterWarmth * waterDay * 0.18);`);
     shader.fragmentShader = shader.fragmentShader.replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
-vec3 rippleNormal = vec3(cos(dot(waterPosition, vec2(0.19, 0.12)) + waterTime * 0.75) * 0.06, 0.0, sin(dot(waterPosition, vec2(-0.08, 0.23)) - waterTime * 0.5) * 0.06);
+vec3 rippleNormal = vec3(cos(waveA) * 0.12 * filterA + cos(waveB) * 0.06 * filterB, 0.0, cos(waveB) * 0.11 * filterB + cos(waveC) * 0.045 * filterC);
 normal = normalize(normal + mat3(viewMatrix) * rippleNormal);`);
   };
-  material.customProgramCacheKey = () => 'nantes-water-v1';
+  material.customProgramCacheKey = () => 'nantes-water-v2';
   return material;
 }

@@ -1,11 +1,11 @@
 import {
   ACESFilmicToneMapping, BufferGeometry, Color, DirectionalLight, Fog, HemisphereLight, InstancedMesh, Mesh,
-  PCFSoftShadowMap, PerspectiveCamera, Scene, Vector3, WebGLRenderer,
+  PCFSoftShadowMap, PerspectiveCamera, Scene, Vector2, Vector3, Raycaster, WebGLRenderer,
 } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import type { Cleanup } from '../../shared/playground';
 import { createCity } from './city';
-import type { CityModel } from './city';
+import type { CityModel, DetailLevel } from './city';
 import { createOverview } from './overview';
 import { selectTiles, TileLoader } from './tiles';
 import type { CityManifest, TileResource } from './tiles';
@@ -20,7 +20,12 @@ import { SolarLighting } from './lighting';
 import { TerrainStore, sampleElevation, tileElevation } from './terrain';
 import type { TerrainManifest, TerrainOverview } from './terrain';
 import { TimeControls, timePanel } from './time-controls';
+import { Traffic } from './traffic';
+import type { TrafficDensity } from './traffic';
+import { BuildingSelection, buildingInformation, isSelectionClick } from './selection';
 import './style.css';
+
+type InteractiveTile = CityModel & TileResource & { data: CityData; lod: DetailLevel };
 
 export function mount(container: HTMLElement): Cleanup {
   container.innerHTML = `
@@ -50,6 +55,8 @@ export function mount(container: HTMLElement): Cleanup {
       </div>
       <p class="nantes-terrain-source">Relief IGN RGE ALTI · NGF-IGN69 · échelle verticale 1:1 · <a href="https://geoservices.ign.fr/rgealti" target="_blank" rel="noopener noreferrer">Source</a> · <a href="https://www.etalab.gouv.fr/licence-ouverte-open-licence/" target="_blank" rel="noopener noreferrer">Licence ouverte</a></p>
       <p class="controls-help" id="nantes-help">Glisser pour tourner · Molette pour zoomer · Clic droit ou deux doigts pour déplacer · Clavier : flèches, +, −, R pour réinitialiser et N pour le nord</p>
+      <label class="nantes-traffic">Circulation <select aria-label="Circulation"><option value="off">Désactivée</option><option value="low">Faible</option><option value="normal" selected>Normale</option></select><small>Cliquer sur un bâtiment pour l’inspecter.</small></label>
+      <div class="nantes-building" hidden aria-live="polite"><div><strong></strong><dl></dl><a target="_blank" rel="noopener noreferrer">Voir le bâtiment sur OpenStreetMap ↗</a></div><button type="button" aria-label="Fermer la fiche du bâtiment">×</button></div>
       <div class="nantes-place" hidden><span><strong class="nantes-place-name"></strong><a class="nantes-place-link" target="_blank" rel="noopener noreferrer">Voir sur OpenStreetMap ↗</a></span><button type="button" data-action="clear-poi" aria-label="Masquer le repère du lieu" title="Masquer le repère">×</button></div>
       <span class="nantes-sr-only nantes-announcement" role="status"></span>
       <div class="nantes-caption"><span><strong>Nantes · Loire & Erdre</strong><br>Empreintes réelles, architecture interprétée</span><span class="nantes-stats" role="status"></span></div>
@@ -78,6 +85,23 @@ export function mount(container: HTMLElement): Cleanup {
   scene.fog = new Fog('#e7ece5', 20000, 65000);
   const ambient = new HemisphereLight('#fff8e7', '#919987', 2.5);
   scene.add(ambient);
+  const traffic = new Traffic(viewport.clientWidth < 600 ? 48 : 96);
+  const trafficControl = container.querySelector<HTMLSelectElement>('.nantes-traffic select')!;
+  const buildingCard = container.querySelector<HTMLElement>('.nantes-building')!;
+  const selectionIndex = new BuildingSelection((feature) => {
+    buildingCard.hidden = !feature;
+    if (feature) {
+      const info = buildingInformation(feature);
+      buildingCard.querySelector('strong')!.textContent = info.title;
+      const list = buildingCard.querySelector('dl')!; list.replaceChildren();
+      for (const [label, value] of [['Type OSM', info.type], ['Hauteur', info.height], ['Niveaux OSM', info.floors], ['Identifiant OSM', info.id]]) {
+        const term = document.createElement('dt'), detail = document.createElement('dd'); term.textContent = label!; detail.textContent = value!; list.append(term, detail);
+      }
+      buildingCard.querySelector('a')!.href = info.url;
+    }
+    requestDraw();
+  });
+  scene.add(traffic.group, selectionIndex.group);
   const atmosphere = atmosphereUniforms();
   const sun = new DirectionalLight('#fff1d5', 3);
   sun.position.set(-350, 700, 250);
@@ -111,7 +135,7 @@ export function mount(container: HTMLElement): Cleanup {
   let terrainOverview: TerrainOverview | undefined;
   let terrainStore: TerrainStore | undefined;
   const terrainFiles = new Map<string, string>();
-  let loader: TileLoader<CityModel & TileResource> | undefined;
+  let loader: TileLoader<InteractiveTile> | undefined;
   let destination: Vector3 | undefined;
   let tileTimer: number | undefined;
   let sceneDirty = false;
@@ -148,7 +172,7 @@ export function mount(container: HTMLElement): Cleanup {
   const refreshDiagnostics = (): void => {
     if (diagnostics.open && loader) {
       const info = loader.info;
-      diagnostics.querySelector('output')!.textContent = `${navigator.active || timeControls.playing || waterActive() ? `Rendu animé : ${movementFps.toFixed(1)} images/s` : 'Au repos : rendu à la demande'} · ${info.active} tuiles · ${info.pending} requêtes · LOD proche/moyen/lointain : ${info.lod.near}/${info.lod.medium}/${info.lod.far} · ${renderer.info.render.calls} appels de dessin · ${renderer.info.render.triangles.toLocaleString('fr-FR')} triangles · relief 20/50/100 m · buffers estimés : ${(info.bytes / 1048576).toFixed(1)} Mio (hors pilote GPU)`;
+      diagnostics.querySelector('output')!.textContent = `${navigator.active || timeControls.playing || waterActive() || traffic.count > 0 ? `Rendu animé : ${movementFps.toFixed(1)} images/s` : 'Au repos : rendu à la demande'} · ${info.active} tuiles · ${info.pending} requêtes · LOD proche/moyen/lointain : ${info.lod.near}/${info.lod.medium}/${info.lod.far} · ${renderer.info.render.calls} appels de dessin · ${renderer.info.render.triangles.toLocaleString('fr-FR')} triangles · relief 20/50/100 m · buffers estimés : ${(info.bytes / 1048576).toFixed(1)} Mio (hors pilote GPU) · ${traffic.count} véhicules · ${traffic.drawCalls} appels circulation · eau ${waterActive() ? 'animée' : 'figée'}`;
     }
   };
   const requestDraw = (): void => scheduler.invalidate();
@@ -167,7 +191,7 @@ export function mount(container: HTMLElement): Cleanup {
     renderer.render(scene, camera);
     if (diagnostics.open) {
       const now = performance.now();
-      if ((navigator.active || timeControls.playing || waterActive()) && lastDraw && now > lastDraw) movementFps = 1000 / (now - lastDraw);
+      if ((navigator.active || timeControls.playing || waterActive() || traffic.count > 0) && lastDraw && now > lastDraw) movementFps = 1000 / (now - lastDraw);
       lastDraw = now;
       refreshDiagnostics();
     }
@@ -181,12 +205,12 @@ export function mount(container: HTMLElement): Cleanup {
   };
   const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
   const waterActive = (): boolean => timeControls.waterPlaying && camera.position.distanceTo(controls.target) < 6500 && overview !== undefined;
-  const updateAnimation = (): void => scheduler.setContinuous(timeControls.playing || waterActive());
+  const updateAnimation = (): void => scheduler.setContinuous(timeControls.playing || waterActive() || traffic.count > 0 && !motion.matches);
   const timeControls = new TimeControls(container, () => {
     lighting.select(timeControls.instant, true);
     updateAnimation(); requestDraw();
   });
-  timeControls.setReduced(motion.matches);
+  timeControls.setReduced(motion.matches); trafficControl.disabled = motion.matches;
   lighting.select(timeControls.instant, true);
   const scheduler = new AnimationScheduler({
     now: () => performance.now(),
@@ -195,7 +219,8 @@ export function mount(container: HTMLElement): Cleanup {
   }, (seconds) => {
     if (timeControls.advance(seconds)) lighting.select(timeControls.instant);
     if (waterActive()) atmosphere.time.value += seconds;
-  }, render, () => navigator.active ? 24 : timeControls.playing ? 12 : 8);
+    if (!motion.matches) traffic.update(seconds);
+  }, render, () => navigator.active || traffic.count || waterActive() ? 24 : 12);
   const readPose = (): CameraPose => readCameraPose(camera, controls.target);
   const applyPose = (pose: CameraPose): void => {
     controls.target.copy(pose.target);
@@ -289,11 +314,31 @@ export function mount(container: HTMLElement): Cleanup {
     else return;
     event.preventDefault();
   };
+  const trafficChanged = (): void => { traffic.select(camera, controls.target, trafficControl.value as TrafficDensity, motion.matches); updateAnimation(); requestDraw(); };
+  const closeBuilding = (): void => selectionIndex.clear();
+  const raycaster = new Raycaster();
+  let press: { x: number; y: number; time: number; id: number } | undefined;
+  const pointerDown = (event: PointerEvent): void => {
+    if (event.button !== 0 || event.target !== renderer.domElement || !event.isPrimary) { press = undefined; return; }
+    press = { x: event.clientX, y: event.clientY, time: performance.now(), id: event.pointerId };
+  };
+  const pointerUp = (event: PointerEvent): void => {
+    const start = press; press = undefined;
+    if (!start || start.id !== event.pointerId || !isSelectionClick(start, { x: event.clientX, y: event.clientY, time: performance.now() }) || navigator.active) return;
+    const bounds = renderer.domElement.getBoundingClientRect();
+    raycaster.setFromCamera(new Vector2((event.clientX - bounds.left) / bounds.width * 2 - 1, -(event.clientY - bounds.top) / bounds.height * 2 + 1), camera);
+    selectionIndex.pick(raycaster.ray);
+  };
+  const pointerCancel = (): void => { press = undefined; };
+  const pointerMove = (event: PointerEvent): void => { if (press && Math.hypot(event.clientX - press.x, event.clientY - press.y) > 5) press = undefined; };
+  viewport.addEventListener('pointerdown', pointerDown); viewport.addEventListener('pointerup', pointerUp); viewport.addEventListener('pointercancel', pointerCancel); viewport.addEventListener('pointermove', pointerMove);
+  trafficControl.addEventListener('change', trafficChanged);
+  buildingCard.querySelector('button')!.addEventListener('click', closeBuilding);
   container.addEventListener('click', click);
   picker.addEventListener('change', selectChange);
   viewport.addEventListener('keydown', keydown);
   controls.addEventListener('start', manualInteraction);
-  const cameraChanged = (): void => { fitCamera(); updateAnimation(); requestDraw(); scheduleTiles(); };
+  const cameraChanged = (): void => { fitCamera(); traffic.select(camera, controls.target, trafficControl.value as TrafficDensity, motion.matches); updateAnimation(); requestDraw(); scheduleTiles(); };
   const diagnosticChanged = (): void => { lastDraw = 0; requestDraw(); };
   diagnostics.addEventListener('toggle', diagnosticChanged);
   controls.addEventListener('change', cameraChanged);
@@ -305,7 +350,7 @@ export function mount(container: HTMLElement): Cleanup {
   };
   const motionChanged = (): void => {
     if (motion.matches) navigator.cancel();
-    timeControls.setReduced(motion.matches); updateAnimation(); requestDraw();
+    timeControls.setReduced(motion.matches); trafficControl.disabled = motion.matches; traffic.select(camera, controls.target, trafficControl.value as TrafficDensity, motion.matches); updateAnimation(); requestDraw();
   };
   document.addEventListener('visibilitychange', visibilityChanged);
   motion.addEventListener('change', motionChanged);
@@ -364,15 +409,16 @@ export function mount(container: HTMLElement): Cleanup {
             }
             if (object instanceof InstancedMesh) bytes += object.instanceMatrix.array.byteLength + (object.instanceColor?.array.byteLength ?? 0);
           });
-          return { ...model, bytes };
+          return { ...model, bytes, data: tileData, lod: choice.lod };
         },
-        attach: (resource, tile) => { scene.add(resource.group); overview?.setTile(tile, true); lighting.invalidateShadows(); sceneDirty = true; },
-        detach: (resource, tile) => { scene.remove(resource.group); overview?.setTile(tile, false); lighting.invalidateShadows(); sceneDirty = true; },
+        attach: (resource, tile) => { scene.add(resource.group); selectionIndex.setTile(tile.id, resource.data, resource.lod, resource.surfaceElevation); if (resource.lod !== 'far') traffic.setTile(tile.id, resource.data, resource.surfaceElevation, terrainOverview!.bridgeLevels); overview?.setTile(tile, true); lighting.invalidateShadows(); sceneDirty = true; },
+        detach: (resource, tile) => { scene.remove(resource.group); selectionIndex.removeTile(tile.id); traffic.removeTile(tile.id); overview?.setTile(tile, false); lighting.invalidateShadows(); sceneDirty = true; },
         changed: () => {
           if (disposed || !loader) return;
           const info = loader.info;
           status.hidden = info.pending === 0 && tileFailures === 0;
           status.textContent = tileFailures ? `${tileFailures} tuile(s) indisponible(s) ; la vue générale reste visible.` : destination ? 'Affinage du quartier sélectionné…' : 'Chargement des quartiers visibles…';
+          selectionIndex.reconcile(); traffic.select(camera, controls.target, trafficControl.value as TrafficDensity, motion.matches); updateAnimation();
           refreshDiagnostics();
           if (sceneDirty) requestDraw();
         },
@@ -406,6 +452,9 @@ export function mount(container: HTMLElement): Cleanup {
     controls.removeEventListener('change', cameraChanged);
     diagnostics.removeEventListener('toggle', diagnosticChanged);
     if (tileTimer !== undefined) window.clearTimeout(tileTimer);
+    viewport.removeEventListener('pointerdown', pointerDown); viewport.removeEventListener('pointerup', pointerUp); viewport.removeEventListener('pointercancel', pointerCancel); viewport.removeEventListener('pointermove', pointerMove);
+    trafficControl.removeEventListener('change', trafficChanged); buildingCard.querySelector('button')!.removeEventListener('click', closeBuilding);
+    selectionIndex.dispose(); traffic.dispose();
     controls.dispose();
     loader?.dispose(); terrainStore?.dispose();
     overview?.dispose();

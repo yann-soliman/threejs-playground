@@ -12,6 +12,7 @@ import type { TerrainTile } from './terrain';
 import type { CityData, Point } from './types';
 
 export interface CityModel {
+  surfaceElevation: (x: number, z: number) => number;
   group: Group;
   windows: number;
   estimatedHeights: number;
@@ -248,7 +249,7 @@ export function createCity(data: CityData, options: { lod?: DetailLevel; ground?
   });
   trunks.computeBoundingSphere(); foliage.computeBoundingSphere();
   let disposed = false;
-  return { group, windows: windowTransforms.length, estimatedHeights, dispose: () => {
+  return { surfaceElevation: sample, group, windows: windowTransforms.length, estimatedHeights, dispose: () => {
     if (disposed) return;
     disposed = true;
     group.traverse((object) => { if (object instanceof InstancedMesh) object.dispose(); });

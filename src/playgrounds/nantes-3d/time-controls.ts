@@ -45,7 +45,7 @@ export class TimeControls {
     this.reduced = reduced;
     if (reduced) this.pause();
     this.play.disabled = reduced; this.water.disabled = reduced;
-    this.note(reduced ? 'Animations réduites : eau figée et lecture désactivée.' : '');
+    this.note(reduced ? 'Animations réduites : eau figée, circulation et lecture désactivées.' : '');
   }
   private note(message: string): void {
     const note = this.panel.querySelector<HTMLElement>('.nantes-time-note')!;
@@ -56,7 +56,7 @@ export class TimeControls {
       if (!this.date.validity.valid || !this.date.value) return;
       const converted = parisInstant(this.date.value, Number(this.hour.value));
       this.instant = converted.instant; this.playing = false;
-      this.note(converted.adjusted ? 'Changement d’heure : cette heure n’existe pas ; passage à 03:00.' : converted.ambiguous ? 'Changement d’heure : première occurrence de cette heure (heure d’été).' : this.reduced ? 'Animations réduites : eau figée et lecture désactivée.' : '');
+      this.note(converted.adjusted ? 'Changement d’heure : cette heure n’existe pas ; passage à 03:00.' : converted.ambiguous ? 'Changement d’heure : première occurrence de cette heure (heure d’été).' : this.reduced ? 'Animations réduites : eau figée, circulation et lecture désactivées.' : '');
       this.refresh();
     }
     this.changed();

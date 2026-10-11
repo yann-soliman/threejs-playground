@@ -107,10 +107,65 @@ tonemapping et brouillard léger à grande distance. Socle de diorama, eau calme
 palette naturelle, cours ouvertes et volumes irréguliers.
 
 OrbitControls permet rotation, zoom et déplacement (clic droit ou deux doigts).
-Des boutons proposent la vue générale, le château, Bouffay, zoom et reset.
-Le viewport est accessible au clavier : flèches pour déplacer, +/− pour zoomer,
-R pour réinitialiser. L’interface française conserve le thème clair existant,
-le focus visible, les liens natifs et une mise en page mobile.
+Les vues « Vue d’ensemble », « Le château » et « Bouffay », ainsi que les boutons
+zoom et reset, restent disponibles. Le clavier fonctionne lorsque la scène a le
+focus : flèches pour déplacer, +/− pour zoomer, **R** pour réinitialiser,
+**N** pour orienter au nord. La boussole est aussi un bouton accessible par Tab,
+Entrée ou Espace ; N/E/S/W correspondent au nord/est/sud/ouest.
+
+### Boussole et transitions V2
+
+La rose circulaire suit l’azimut de la caméra ; les lettres restent lisibles et
+le nord est distingué par une aiguille couleur terre cuite. Cliquer la boussole
+place le nord en haut de l’écran **sans modifier la cible, la distance ni
+l’inclinaison**. Avec X vers l’est et Z vers le sud, cela correspond à l’azimut 0.
+Les angles sont déroulés pour éviter un tour artificiel au passage de ±π.
+
+Les vues, points d’intérêt, le reset et la réorientation au nord utilisent une
+transition de **1,4 seconde**, avec accélération et décélération douces et rotation
+par le chemin le plus court. Un nouveau choix remplace le précédent depuis la
+position actuelle. Un geste souris/tactile, une molette, un zoom ou un déplacement
+clavier annule le trajet. Si `prefers-reduced-motion: reduce` est activé,
+la navigation devient immédiate. Les choix de lieux conservent l’orientation et
+l’inclinaison actuelles ; seule leur distance de cadrage change intentionnellement.
+
+### Points d’intérêt
+
+Le sélecteur « Lieux à explorer » propose quatre lieux. Une sélection affiche
+son nom, un repère discret et un lien vers sa position OpenStreetMap. Les raccourcis
+château/Bouffay utilisent la même sélection. Un seul repère est affiché ; il suit
+la projection de la caméra, disparaît hors du champ et peut être masqué. La vue
+générale et le reset effacent la sélection. Une manipulation manuelle garde le
+repère mais retire l’état actif du raccourci de vue.
+
+`pois.ts` contient une liste typée et extensible, sans API externe. Chaque entrée
+possède `id`, `name`, `coordinates` ([latitude, longitude] WGS84), `source`
+(identifiant OSM), `distance` et `markerHeight`. Les coordonnées sont des centres
+d’emprise calculés depuis les géométries du snapshot du 11 octobre 2026 :
+
+| Lieu | Ancrage OSM | Latitude | Longitude |
+| --- | --- | --- | --- |
+| Château des ducs de Bretagne | Grand Logis, relation/17369788 | 47.21586895 | -1.549972 |
+| Quartier du Bouffay | Place du Bouffay, way/160751210 | 47.21477925 | -1.5532396 |
+| Cathédrale Saint-Pierre-et-Saint-Paul | way/28379422 | 47.21837155 | -1.55020215 |
+| Église Sainte-Croix | way/28810231 | 47.21536645 | -1.55395435 |
+
+La place et le Grand Logis servent d’ancrages représentatifs du quartier et du
+château. `distance` et `markerHeight` sont des réglages de présentation estimés,
+pas des mesures OSM. Le repère est un élément HTML projeté au-dessus du volume
+procédural ; il n’effectue pas de test d’occlusion avec les bâtiments.
+
+Pour ajouter un lieu : ajouter une entrée dans `pointsOfInterest`, avec un
+identifiant unique, un nom français, des coordonnées vérifiées dans l’emprise et
+un identifiant source. Ajuster le cadrage et la hauteur du repère après aperçu.
+Le sélecteur et le lien OSM se construisent automatiquement. Mettre à jour le test
+d’ancrage si la source est une autre géométrie ou un point OSM. Les sources hors
+emprise sont refusées. La projection utilise `meta.origin`, comme le diorama.
+
+`navigation.ts` sépare les poses et le pilote `CameraNavigator` de l’interface.
+`index.ts` raccorde ce pilote à OrbitControls et aux événements DOM. Aucune
+modification du routeur, du catalogue, des données géographiques ni du générateur
+de bâtiments n’est nécessaire pour cette V2.
 
 ## Performance et cycle de vie
 
@@ -118,17 +173,21 @@ le focus visible, les liens natifs et une mise en page mobile.
 - Fenêtres/cadres et troncs/feuillages instanciés ; **13 objets de rendu** pour cet extrait,
   au lieu d’un objet par bâtiment, fenêtre ou arbre (les ombres ajoutent leur passe).
 - Rendu uniquement au changement de caméra, au redimensionnement et au chargement.
-  Pas de boucle d’animation, pas de post-traitement, ombres calculées une fois après montage.
+  Une seule chaîne `requestAnimationFrame` pendant les transitions ; aucun callback
+  restant après arrivée, interruption ou fermeture. Pas de post-traitement ;
+  ombres calculées une fois après montage.
 - Pixel ratio plafonné à 1,5 ; carte d’ombres 2 048² ; aucune dépendance ajoutée.
 - Nettoyage des géométries, matériaux, buffers d’instances, ombres, contrôles,
   renderer et contexte WebGL ; observateur et écouteurs retirés ; fetch annulé.
-  Une réponse terminée après la fermeture ne monte pas de modèle.
+  Une réponse terminée après la fermeture ne monte pas de modèle. La transition
+  et les callbacks tardifs sont annulés ; les écouteurs du sélecteur et du geste
+  de début OrbitControls sont retirés. Le repère HTML n’ajoute aucun draw call.
 - Asset JSON statique hashé par Vite via `new URL('./data/city.json', import.meta.url)` :
   URL sous `/threejs-playground/assets/`, sans backend, credentials ni requête OSM.
   Snapshot brut exclu du build. L’accueil n’importe toujours pas Three.js.
 
 Le JSON préparé pèse environ 682 Ko (188 Ko avec gzip) ; le module Three.js/Nantes
-environ 606 Ko minifiés (155 Ko gzip). Vite signale un chunk supérieur à 500 Ko,
+environ 612 Ko minifiés (157 Ko gzip). Vite signale un chunk supérieur à 500 Ko,
 chargé uniquement à l’ouverture de l’expérience. GitHub Pages décide de la compression HTTP.
 
 ## Vérifications et limites
@@ -147,7 +206,11 @@ Tests Vitest : provenance/emprise, interprétation des tags, géométries finies
 les 1 293 empreintes réelles, rayon traversant une cour, batching et nettoyage.
 Tests Python : raccordement des relations, clipping, rejet des réponses incomplètes,
 déduplication. Le traitement local a été vérifié par égalité SHA-256 avant/après.
-Les tests du routeur existants restent inchangés.
+Les tests du routeur existants restent inchangés. Les tests V2 couvrent
+l’orientation du nord projeté, le passage de ±π, l’easing, l’arrivée, l’interruption,
+le remplacement et la destruction des transitions, la réduction des animations,
+la sélection des lieux, les liens OSM et la concordance des ancrages avec l’asset.
+Le pilote est testé avec une horloge contrôlée, sans timer ni contexte WebGL.
 
 Validation réellement effectuée sur le build de production avec Chromium headless,
 WebGL 2 et GPU logiciel, aux formats 1 440 × 1 000 et 390 × 844 : liens directs,
@@ -156,6 +219,17 @@ pan par clic droit et clavier, rechargement et abandon pendant le chargement.
 Aucune erreur de page, réponse HTTP en échec, requête OSM au runtime ou débordement
 horizontal observé. Les captures aériennes, château et mobile ont été inspectées
 visuellement. Cette validation ne mesure pas les performances sur un GPU physique.
+
+
+Validation V2 également effectuée sur le build de production dans Chromium, aux
+mêmes formats : boussole par clic/Entrée, repère et cadrage préservés au nord,
+choix successifs de lieux, lien OSM, interruptions clavier/molette, reset,
+fermeture pendant transition et remontage. L’instrumentation du navigateur
+confirme au maximum un callback d’animation de l’application en attente et aucun
+dessin WebGL au repos. Le mode de réduction des animations ne démarre aucun rAF.
+Aucune erreur de page, réponse HTTP en échec, requête OSM au runtime ou débordement
+horizontal observé. Les captures V2 sur ordinateur et mobile simulé ont été
+inspectées ; gestes sur téléphone physique et Safari restent à vérifier.
 
 Limites : terrain plat ; hauteur de nombreux bâtiments inconnue ; monuments
 interprétés et non reconstruits en détail ; pas de distinction fine des parties

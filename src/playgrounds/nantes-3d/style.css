@@ -7,8 +7,33 @@
 .nantes-viewport { height: clamp(350px, 52vw, 600px); background: #e7ece5; }
 .nantes-viewport:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
 .nantes-loading { position: absolute; z-index: 2; top: 42%; left: 15%; width: 70%; padding: 18px; text-align: center; background: #fafaf8ef; border-radius: 8px; font-size: 14px; color: #47564a; }
-.nantes-compass { position: absolute; top: 18px; left: 20px; display: grid; justify-items: center; color: #435646; font-size: 10px; pointer-events: none; }
-.nantes-compass i { font-style: normal; font-size: 30px; line-height: 1.2; }
+.nantes button:disabled { cursor: wait; opacity: .55; }
+.nantes .nantes-compass { position: absolute; top: 16px; left: 16px; width: 84px; height: 84px; padding: 0; border: 1px solid #cbd6cb; border-radius: 50%; background: #fffffff0; box-shadow: 0 3px 14px #43564612; color: #435646; --heading: 0rad; }
+.nantes .nantes-compass:hover { background: #fff; border-color: #829989; }
+.nantes-compass-rose { display: block; width: 100%; height: 100%; position: relative; transform: rotate(var(--heading)); }
+.nantes-cardinal { position: absolute; font-size: 10px; line-height: 1; transform: translate(-50%, -50%); font-weight: 600; }
+.nantes-cardinal > span { display: block; transform: rotate(calc(-1 * var(--heading))); }
+.nantes-cardinal.north { top: 13%; left: 50%; color: #a35342; }
+.nantes-cardinal.east { top: 50%; left: 87%; }
+.nantes-cardinal.south { top: 87%; left: 50%; }
+.nantes-cardinal.west { top: 50%; left: 13%; }
+.nantes-compass svg { position: absolute; inset: 0; width: 100%; height: 100%; stroke: none; fill: #435646; }
+.nantes-compass .north-needle { fill: #a35342; }
+.nantes-compass .south-needle { fill: #b1bfb1; }
+.nantes-poi-picker { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--muted); min-width: 0; }
+.nantes-poi-picker select { font: inherit; color: #344639; background: #fff; border: 1px solid var(--border); border-radius: 6px; min-height: 40px; width: 210px; max-width: 100%; padding: 8px; }
+.nantes-poi-picker select:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.nantes-poi-picker select:disabled { opacity: .55; }
+.nantes-poi-marker { position: absolute; top: 0; left: 0; width: 18px; height: 28px; margin-left: -9px; margin-top: -28px; pointer-events: none; }
+.nantes-poi-marker > span { position: absolute; width: 18px; height: 18px; left: 0; top: 0; background: #28634d; border: 3px solid #fffffff0; border-radius: 50%; box-shadow: 0 2px 6px #203f3440; }
+.nantes-poi-marker::after { content: ''; position: absolute; bottom: 0; left: 8px; height: 11px; width: 2px; background: #28634d; }
+.nantes-place { display: flex; justify-content: space-between; gap: 12px; align-items: center; border: 1px solid var(--border); border-radius: 7px; padding: 10px 12px; margin-top: 14px; background: #f2f5ef; font-size: 12px; line-height: 1.6; }
+.nantes-place > span { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px 16px; min-width: 0; }
+.nantes-place strong { font-weight: 600; color: #344639; }
+.nantes-place a { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; }
+.nantes-place button { flex-shrink: 0; font-size: 20px; }
+.nantes-place[hidden], .nantes-poi-marker[hidden] { display: none; }
+.nantes-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
 .nantes-navigation { position: absolute; right: 16px; top: 16px; display: grid; background: #fffffff0; border: 1px solid #dce2db; border-radius: 7px; box-shadow: 0 3px 14px #43564610; }
 .nantes-navigation button { font-size: 20px; width: 40px; height: 40px; padding: 4px; }
 .nantes-navigation button + button { border-top: 1px solid #dce2db; border-radius: 0; }
@@ -26,4 +51,7 @@
   .nantes-views { width: 100%; justify-content: space-between; }
   .nantes-views button { padding-inline: 9px; }
   .nantes-viewport { height: 430px; }
+  .nantes-poi-picker { width: 100%; justify-content: space-between; }
+  .nantes-poi-picker select { flex: 1; min-width: 0; max-width: 240px; }
+  .nantes .nantes-compass { width: 72px; height: 72px; top: 12px; left: 12px; }
 }

@@ -1,0 +1,61 @@
+import { Vector3 } from 'three';
+import type { CameraPose } from './navigation';
+import type { CityData, Point } from './types';
+
+export interface PointOfInterest {
+  id: string;
+  name: string;
+  coordinates: Point; // Latitude, longitude WGS84 ; ancrage dans le lieu nommé.
+  source: string;
+  distance: number; // Cadrage en mètres ; estimation visuelle, pas une propriété OSM.
+  markerHeight: number; // Au-dessus du volume procédural, sans mesure d'altitude réelle.
+}
+
+// Ancrages issus des géométries du snapshot OSM du 11 octobre 2026.
+// Le Grand Logis représente le château ; la place représente le quartier Bouffay.
+export const pointsOfInterest: readonly PointOfInterest[] = [
+  { id: 'castle', name: 'Château des ducs de Bretagne', coordinates: [47.21586895, -1.549972], source: 'relation/17369788', distance: 380, markerHeight: 26 },
+  { id: 'bouffay', name: 'Quartier du Bouffay', coordinates: [47.21477925, -1.5532396], source: 'way/160751210', distance: 300, markerHeight: 4 },
+  { id: 'cathedral', name: 'Cathédrale Saint-Pierre-et-Saint-Paul', coordinates: [47.21837155, -1.55020215], source: 'way/28379422', distance: 380, markerHeight: 38 },
+  { id: 'sainte-croix', name: 'Église Sainte-Croix', coordinates: [47.21536645, -1.55395435], source: 'way/28810231', distance: 260, markerHeight: 28 },
+];
+
+export function projectCoordinates(coordinates: Point, origin: Point): Vector3 {
+  const scale = 6371008.8 * Math.PI / 180;
+  return new Vector3(
+    (coordinates[1] - origin[1]) * scale * Math.cos(origin[0] * Math.PI / 180),
+    0,
+    -(coordinates[0] - origin[0]) * scale,
+  );
+}
+
+export function osmLocation(poi: PointOfInterest): string {
+  const [latitude, longitude] = poi.coordinates;
+  return `https://www.openstreetmap.org/?mlat=${latitude}&mlon=${longitude}#map=18/${latitude}/${longitude}`;
+}
+
+export function poiPose(poi: PointOfInterest, origin: Point, current: CameraPose, aspect: number): CameraPose {
+  return {
+    ...current,
+    target: projectCoordinates(poi.coordinates, origin),
+    distance: Math.max(50, Math.min(2600, poi.distance * Math.max(1, 0.95 / Math.max(0.1, aspect)))),
+  };
+}
+
+export interface PoiSelection {
+  point: PointOfInterest;
+  pose: CameraPose;
+  marker: Vector3;
+  url: string;
+}
+
+export function selectPointOfInterest(id: string, meta: CityData['meta'], current: CameraPose, aspect: number): PoiSelection | undefined {
+  const point = pointsOfInterest.find((poi) => poi.id === id);
+  if (!point) return undefined;
+  const [south, west, north, east] = meta.bbox;
+  const [latitude, longitude] = point.coordinates;
+  if (latitude < south! || latitude > north! || longitude < west! || longitude > east!) return undefined;
+  const marker = projectCoordinates(point.coordinates, meta.origin);
+  marker.y = point.markerHeight;
+  return { point, pose: poiPose(point, meta.origin, current, aspect), marker, url: osmLocation(point) };
+}

@@ -7,6 +7,10 @@ import type { Cleanup } from '../../shared/playground';
 import { createCity } from './city';
 import type { CityModel } from './city';
 import type { CityData } from './types';
+import { aerialPose, CameraNavigator, cameraPosition, northPose, readCameraPose, shortestAngle } from './navigation';
+import type { CameraPose } from './navigation';
+import { pointsOfInterest, selectPointOfInterest } from './pois';
+import type { PoiSelection } from './pois';
 import './style.css';
 
 export function mount(container: HTMLElement): Cleanup {
@@ -16,18 +20,27 @@ export function mount(container: HTMLElement): Cleanup {
       <div class="experience-heading"><h1 id="nantes-title">Nantes 3D</h1><span class="badge">Première exploration</span></div>
       <p class="experience-summary">Bouffay, le château et leurs alentours. Une promenade au-dessus de la ville, dessinée par OpenStreetMap.</p>
       <div class="nantes-toolbar" aria-label="Vues de la ville">
-        <div class="nantes-views"><button type="button" data-view="aerial" aria-pressed="true">Vue d’ensemble</button><button type="button" data-view="castle" aria-pressed="false">Le château</button><button type="button" data-view="bouffay" aria-pressed="false">Bouffay</button></div>
+        <div class="nantes-views"><button type="button" data-view="aerial" aria-pressed="true">Vue d’ensemble</button><button type="button" data-view="castle" aria-pressed="false" disabled>Le château</button><button type="button" data-view="bouffay" aria-pressed="false" disabled>Bouffay</button></div>
+        <label class="nantes-poi-picker"><span>Lieux à explorer</span><select aria-label="Choisir un point d’intérêt" disabled><option value="">Choisir un lieu…</option></select></label>
         <span class="nantes-extent">846 × 801 m <span aria-hidden="true">·</span> centre historique</span>
       </div>
       <div class="viewport nantes-viewport" tabindex="0" role="region" aria-label="Maquette 3D interactive de Nantes" aria-describedby="nantes-help">
         <p class="nantes-loading" role="status">Préparation de la maquette…</p>
-        <div class="nantes-compass" aria-hidden="true"><span>N</span><i>↑</i></div>
+        <button type="button" class="nantes-compass" data-action="north" aria-label="Orienter la vue vers le nord" title="Orienter vers le nord sans changer le centre, le zoom ni l’inclinaison (N)">
+          <span class="nantes-compass-rose" aria-hidden="true">
+            <span class="nantes-cardinal north"><span>N</span></span><span class="nantes-cardinal east"><span>E</span></span><span class="nantes-cardinal south"><span>S</span></span><span class="nantes-cardinal west"><span>W</span></span>
+            <svg viewBox="0 0 80 80" focusable="false"><path class="north-needle" d="M40 20 34 43 40 39 46 43Z"/><path class="south-needle" d="M40 60 34 43 40 47 46 43Z"/><circle cx="40" cy="42" r="2"/></svg>
+          </span>
+        </button>
+        <div class="nantes-poi-marker" aria-hidden="true" hidden><span></span></div>
         <div class="nantes-navigation" aria-label="Commandes de caméra">
           <button type="button" data-action="in" aria-label="Zoom avant">+</button><button type="button" data-action="out" aria-label="Zoom arrière">−</button><button type="button" data-action="reset" aria-label="Réinitialiser la caméra">↺</button>
         </div>
         <a class="nantes-attribution" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">© OpenStreetMap contributors · ODbL</a>
       </div>
-      <p class="controls-help" id="nantes-help">Glisser pour tourner · Molette pour zoomer · Clic droit ou deux doigts pour déplacer · Clavier : flèches, +, − et R</p>
+      <p class="controls-help" id="nantes-help">Glisser pour tourner · Molette pour zoomer · Clic droit ou deux doigts pour déplacer · Clavier : flèches, +, −, R pour réinitialiser et N pour le nord</p>
+      <div class="nantes-place" hidden><span><strong class="nantes-place-name"></strong><a class="nantes-place-link" target="_blank" rel="noopener noreferrer">Voir sur OpenStreetMap ↗</a></span><button type="button" data-action="clear-poi" aria-label="Masquer le repère du lieu" title="Masquer le repère">×</button></div>
+      <span class="nantes-sr-only nantes-announcement" role="status"></span>
       <div class="nantes-caption"><span><strong>Bouffay & Château des ducs de Bretagne</strong><br>Empreintes réelles, architecture interprétée</span><span class="nantes-stats" role="status"></span></div>
       <details class="nantes-data"><summary>À propos de cette maquette</summary><p class="nantes-provenance"></p><p>Les empreintes, rues, places, espaces verts et arbres proviennent d’OpenStreetMap. Les hauteurs et toitures utilisent les attributs disponibles ; les autres dimensions, fenêtres, matériaux et détails de façade sont estimés de manière déterministe. Le relief est plat et les formes de toit sont approximatives.</p><p><a href="https://www.openstreetmap.org/#map=16/47.2156/-1.5524" target="_blank" rel="noopener noreferrer">Voir ce quartier sur OpenStreetMap ↗</a> · <a href="https://opendatacommons.org/licenses/odbl/1-0/" target="_blank" rel="noopener noreferrer">Licence des données ODbL ↗</a></p></details>
     </section>`;
@@ -67,58 +80,138 @@ export function mount(container: HTMLElement): Cleanup {
   controls.minDistance = 50; controls.maxDistance = 2600;
   controls.maxPolarAngle = Math.PI / 2.25;
   controls.screenSpacePanning = false;
-  // Rendu à la demande : pas de boucle permanente ni amortissement nécessitant des frames.
-  const compass = container.querySelector<HTMLElement>('.nantes-compass i')!;
+  const compass = container.querySelector<HTMLElement>('.nantes-compass')!;
+  const marker = container.querySelector<HTMLElement>('.nantes-poi-marker')!;
+  const picker = container.querySelector<HTMLSelectElement>('.nantes-poi-picker select')!;
+  const place = container.querySelector<HTMLElement>('.nantes-place')!;
+  const announcement = container.querySelector<HTMLElement>('.nantes-announcement')!;
+  for (const point of pointsOfInterest) {
+    const option = document.createElement('option');
+    option.value = point.id; option.textContent = point.name;
+    picker.append(option);
+  }
   let disposed = false;
   let model: CityModel | undefined;
+  let cityData: CityData | undefined;
+  let selection: PoiSelection | undefined;
+  let compassHeading = 0;
+  let previousHeading = 0;
+  const markerProjection = new Vector3();
   const draw = (): void => {
     if (disposed) return;
-    compass.style.transform = `rotate(${controls.getAzimuthalAngle()}rad)`;
+    const heading = controls.getAzimuthalAngle();
+    // Dérouler les angles évite un tour artificiel lors du passage de +π à −π.
+    compassHeading += shortestAngle(previousHeading, heading);
+    previousHeading = heading;
+    compass.style.setProperty('--heading', `${compassHeading}rad`);
     renderer.render(scene, camera);
+    if (selection) {
+      markerProjection.copy(selection.marker).project(camera);
+      const visible = markerProjection.z >= -1 && markerProjection.z <= 1 && Math.abs(markerProjection.x) <= 1 && Math.abs(markerProjection.y) <= 1;
+      marker.hidden = !visible;
+      if (visible) marker.style.transform = `translate(${(markerProjection.x + 1) * viewport.clientWidth / 2}px, ${(1 - markerProjection.y) * viewport.clientHeight / 2}px)`;
+    } else marker.hidden = true;
   };
-  function setView(view: string): void {
-    const target = view === 'castle' ? new Vector3(245, 0, -65) : view === 'bouffay' ? new Vector3(-180, 0, 150) : new Vector3(0, 0, 55);
-    controls.target.copy(target);
-    camera.position.copy(target).add(view === 'aerial' ? new Vector3(650, 800, 980).multiplyScalar(Math.max(1, 1.12 / (viewport.clientWidth / viewport.clientHeight))) : new Vector3(170, 220, 260));
+  const readPose = (): CameraPose => readCameraPose(camera, controls.target);
+  const applyPose = (pose: CameraPose): void => {
+    controls.target.copy(pose.target);
+    camera.position.copy(cameraPosition(pose));
+    // L’événement change assure le rendu ; aucune seconde frame pour le même pas.
     controls.update();
-    container.querySelectorAll<HTMLButtonElement>('[data-view]').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.view === view)));
+  };
+  const navigator = new CameraNavigator(readPose, applyPose, {
+    now: () => performance.now(),
+    request: (callback) => window.requestAnimationFrame(callback),
+    cancel: (id) => window.cancelAnimationFrame(id),
+  });
+  const aspect = (): number => viewport.clientWidth / Math.max(1, viewport.clientHeight);
+  const moveTo = (pose: CameraPose): void => {
+    navigator.moveTo(pose, window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 1400);
+  };
+  const activeView = (id: string): void => {
+    container.querySelectorAll<HTMLButtonElement>('[data-view]').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.view === id)));
+  };
+  const clearPoi = (): void => {
+    navigator.cancel();
+    selection = undefined;
+    picker.value = '';
+    marker.hidden = true;
+    place.hidden = true;
+    announcement.textContent = '';
+  };
+  const selectPoi = (id: string): void => {
+    if (!cityData) return;
+    const next = selectPointOfInterest(id, cityData.meta, readPose(), aspect());
+    if (!next) return;
+    selection = next;
+    picker.value = next.point.id;
+    container.querySelector<HTMLElement>('.nantes-place-name')!.textContent = next.point.name;
+    container.querySelector<HTMLAnchorElement>('.nantes-place-link')!.href = next.url;
+    announcement.textContent = `Lieu sélectionné : ${next.point.name}`;
+    place.hidden = false;
+    activeView(id);
     draw();
-  }
+    moveTo(next.pose);
+  };
+  const setView = (view: string): void => {
+    if (view !== 'aerial') { selectPoi(view); return; }
+    clearPoi();
+    activeView('aerial');
+    moveTo(aerialPose(aspect()));
+  };
+  const orientNorth = (): void => moveTo(northPose(readPose()));
+  const manualInteraction = (): void => {
+    navigator.cancel();
+    activeView('');
+  };
   const resize = (): void => {
     if (disposed || !viewport.clientWidth || !viewport.clientHeight) return;
     renderer.setSize(viewport.clientWidth, viewport.clientHeight);
-    camera.aspect = viewport.clientWidth / viewport.clientHeight;
+    camera.aspect = aspect();
     camera.updateProjectionMatrix(); draw();
   };
   const zoom = (factor: number): void => {
-    const offset = camera.position.clone().sub(controls.target);
-    offset.setLength(Math.max(controls.minDistance, Math.min(controls.maxDistance, offset.length() * factor)));
-    camera.position.copy(controls.target).add(offset); controls.update(); draw();
+    manualInteraction();
+    const pose = readPose();
+    pose.distance = Math.max(controls.minDistance, Math.min(controls.maxDistance, pose.distance * factor));
+    applyPose(pose);
   };
   const click = (event: MouseEvent): void => {
     const button = (event.target as HTMLElement).closest<HTMLButtonElement>('button');
+    if (button?.disabled) return;
     if (button?.dataset.view) setView(button.dataset.view);
     if (button?.dataset.action === 'reset') setView('aerial');
+    if (button?.dataset.action === 'north') orientNorth();
     if (button?.dataset.action === 'in') zoom(0.8);
     if (button?.dataset.action === 'out') zoom(1.25);
+    if (button?.dataset.action === 'clear-poi') clearPoi();
+  };
+  const selectChange = (): void => {
+    if (picker.value) selectPoi(picker.value);
+    else { clearPoi(); activeView(''); }
   };
   const keydown = (event: KeyboardEvent): void => {
     if (event.target !== viewport) return;
     const direction: Record<string, Vector3> = { ArrowLeft: new Vector3(-15, 0, 0), ArrowRight: new Vector3(15, 0, 0), ArrowUp: new Vector3(0, 0, -15), ArrowDown: new Vector3(0, 0, 15) };
     if (direction[event.key]) {
-      camera.position.add(direction[event.key]!); controls.target.add(direction[event.key]!); controls.update(); draw();
+      manualInteraction();
+      camera.position.add(direction[event.key]!); controls.target.add(direction[event.key]!); controls.update();
     } else if (event.key === '+' || event.key === '=') zoom(0.8);
     else if (event.key === '-') zoom(1.25);
     else if (event.key.toLowerCase() === 'r') setView('aerial');
+    else if (event.key.toLowerCase() === 'n') orientNorth();
     else return;
     event.preventDefault();
   };
   container.addEventListener('click', click);
+  picker.addEventListener('change', selectChange);
   viewport.addEventListener('keydown', keydown);
+  controls.addEventListener('start', manualInteraction);
   controls.addEventListener('change', draw);
   const observer = new ResizeObserver(resize);
   observer.observe(viewport);
-  setView('aerial'); resize();
+  // Premier cadrage immédiat au montage ; toutes les actions suivantes sont animées.
+  applyPose(aerialPose(aspect())); resize();
   const request = new AbortController();
   // Vite émet une ressource hashée sous le base GitHub Pages ; aucune API au runtime.
   void fetch(new URL('./data/city.json', import.meta.url), { signal: request.signal })
@@ -128,7 +221,10 @@ export function mount(container: HTMLElement): Cleanup {
     })
     .then((data) => {
       if (disposed) return;
+      cityData = data;
       model = createCity(data);
+      picker.disabled = false;
+      container.querySelectorAll<HTMLButtonElement>('[data-view]').forEach((button) => { button.disabled = false; });
       scene.add(model.group);
       status.hidden = true;
       stats.textContent = `${data.buildings.length.toLocaleString('fr-FR')} bâtiments · ${data.trees.length.toLocaleString('fr-FR')} arbres cartographiés`;
@@ -145,9 +241,12 @@ export function mount(container: HTMLElement): Cleanup {
   return () => {
     disposed = true;
     request.abort();
+    navigator.dispose();
     observer.disconnect();
     container.removeEventListener('click', click);
+    picker.removeEventListener('change', selectChange);
     viewport.removeEventListener('keydown', keydown);
+    controls.removeEventListener('start', manualInteraction);
     controls.removeEventListener('change', draw);
     controls.dispose();
     model?.dispose();

@@ -1,4 +1,4 @@
-# Nantes 3D — V3
+# Nantes 3D — V4A
 
 Diorama interactif de **toute la commune de Nantes**, dans l’architecture existante
 `mount(container): Cleanup`. Three.js, TypeScript strict, HTML/CSS natifs et fichiers
@@ -160,23 +160,121 @@ Commerce et les deux parcs sont ancrés dans les géométries OSM municipales
 représentatifs de cadrage vérifiables par les liens OSM. Hauteur du repère et distance
 restent des choix graphiques. Un seul repère HTML projeté, sans test d’occlusion.
 
-Palette V2, soleil, lumière hémisphérique, toits et façades variés, brouillard adapté
-à la distance. Hauteur OSM ou niveaux × 3,15 m ; sinon estimation déterministe,
+Palette V2, soleil astronomique, lumière hémisphérique variable, toits et façades
+variés, brouillard adapté à la distance et à l’heure. Hauteur OSM ou niveaux × 3,15 m ; sinon estimation déterministe,
 avec interprétation spécifique des monuments. Les fenêtres et formes de toit
 restent procédurales ; les couleurs/matériaux OSM sont utilisés lorsqu’ils existent.
 
 Ombres locales sur une zone de 1 240 m, recentrée avec la navigation ; désactivées
-au-delà de 2 400 m. Elles sont recalculées aux changements utiles, sans couvrir
-la commune entière. Rendu à la demande, une seule chaîne rAF pendant une transition,
-aucune boucle permanente au repos. Les arrivées de géométrie sont regroupées
-sur 32 ms ; les simples mises à jour du statut ne redessinent pas la scène. Le diagnostic repliable affiche tuiles, requêtes,
+au-delà de 2 400 m et quand le soleil est trop bas. Elles sont recalculées aux
+changements utiles, sans couvrir la commune entière. Un ordonnanceur commun
+regroupe les mises à jour ; les simples mises à jour du statut ne redessinent pas
+la scène. Sans lecture, eau animée ni transition, le rendu revient au repos. Le diagnostic repliable affiche tuiles, requêtes,
 LOD, appels de dessin, triangles et estimation des buffers via le renderer.
 La cadence affichée est instantanée pendant une transition, pas un benchmark moyen.
 
 À la fermeture : annulation fetch/timers/transitions, contrôles/écouteurs/observateur
 retirés, modèles/cache/instances/matériaux/géométries/masque/ombres/contextes libérés.
 
-## Validation et limites
+## Date, soleil et nuit
+
+Le panneau propose la date (2000–2099), un curseur de 00:00 à 23:59, **Maintenant**,
+lecture/pause et trois vitesses : 1, 10 ou 60 minutes simulées par seconde réelle.
+Au montage, la date et l’heure sont celles de l’instant courant à Nantes. Modifier
+la date ou l’heure met la lecture en pause et actualise l’éclairage sans reconstruire
+les bâtiments. Lever et coucher calculés sont affichés pour la date sélectionnée.
+
+`time.ts` utilise `Intl.DateTimeFormat` et le fuseau **Europe/Paris**, indépendamment
+du fuseau du navigateur. Les décalages sont déterminés pour la date choisie, pas
+fixés à UTC+1. Au printemps, une heure inexistante est reportée à 03:00 ; en automne,
+la première occurrence de l’heure répétée est sélectionnée. Le panneau l’indique.
+La lecture avance des instants UTC : elle traverse naturellement les deux bascules.
+
+`solar.ts` implémente les [équations NOAA](https://gml.noaa.gov/grad/solcalc/calcdetails.html)
+(jour julien, longitude apparente, obliquité, déclinaison et équation du temps),
+sans dépendance ajoutée. Position pour 47,2156° N / −1,5524° E : azimut mesuré depuis
+le nord dans le sens horaire, hauteur géométrique ; conversion en **X est, Y haut,
+Z sud**. Le lever/coucher utilise −0,833° (disque et réfraction standard), le crépuscule
+civil −6°. Le relief et les conditions atmosphériques locales ne sont pas calculés.
+
+`lighting.ts` fait varier soleil, ciel, brouillard, lumière hémisphérique et exposition
+avec des transitions continues. Soleil chaud et ombres longues à faible hauteur,
+lumière naturelle à midi, ambiance bleue la nuit avec éclairage ambiant de lisibilité.
+Le soleil direct est nul sous l’horizon. Les ombres conservent une emprise locale
+±620 m, tournée selon le soleil ; désactivées au-delà de 2 400 m ou sous 0,5° pour
+limiter les artefacts rasants. En lecture, mise à jour au plus toutes les 500 ms,
+si la direction a changé de plus de 0,5° ; un choix manuel, une nouvelle tuile ou
+un recentrage utile force la mise à jour. Le soleil lui-même continue son trajet.
+
+Les fenêtres du LOD proche réutilisent les instances V3. Un attribut de trois
+flottants par fenêtre porte une teinte emissive déterministe : environ **21 %**
+allumées, trois teintes chaudes, majorité sombre. L’uniforme de nuit module leur
+émission au crépuscule sans modification des buffers ni PointLights. Les LOD
+moyen/lointain restent sans fenêtres individuelles. Aucun bloom coûteux.
+
+## Eau et ordonnanceur
+
+`atmosphere.ts` fournit les uniformes communs et les matériaux de fenêtre et d’eau.
+L’eau est un lot distinct des parcs/places, soit un appel de dessin supplémentaire
+pour chaque modèle qui contient de l’eau. Deux ondulations sinusoïdales modulent
+légèrement couleur et normale : reflets doux, **pas de déplacement vertical**,
+pas de réflexion du reste de la scène. Coordonnées mondiales et horloge uniques
+pour toutes les tuiles et LOD. Les nouveaux modèles rejoignent la phase courante ;
+le shader reste combiné au masque de remplacement de la vue générale.
+
+**Animer l’eau** permet de revenir à une scène immobile. Par défaut elle s’anime
+aux cadrages situés à moins de 6 500 m de la cible ; la vue municipale éloignée reste
+statique. Couleur plus claire le jour, reflet chaud près du coucher, eau sombre la nuit.
+
+`animation.ts` centralise le seul rAF natif, les callbacks de CameraNavigator,
+la progression du temps et l’horloge de l’eau. Cadences maximales : **24 images/s pour la caméra, 12 pour la lecture et 8 pour
+l’eau seule**, avec un intervalle libre après chaque dessin et delta réel entre images ; les limites matérielles peuvent donner beaucoup moins.
+Une frame très tardive allonge le prochain intervalle libre (jusqu’à 3 s) pour
+laisser respirer les GPU lents ; cela peut rendre l’animation saccadée en rendu logiciel.
+Les invalidations caméra/temps/tuiles sont regroupées dans cette même frame.
+Un simple compteur de requêtes ne demande aucun dessin. Les métriques de rendu
+ne sont actualisées que si le panneau de diagnostic est ouvert.
+
+`visibilitychange` et IntersectionObserver arrêtent l’ordonnanceur lorsque l’onglet
+est masqué ou le viewport hors écran. La lecture et les transitions sont interrompues ;
+l’eau reprend à sa phase conservée, sans rattrapage du temps masqué. Avec
+`prefers-reduced-motion`, eau figée, lecture désactivée et caméra immédiate ; les
+changements manuels d’heure restent disponibles. La préférence est suivie à chaud.
+À la fermeture : annulation du rAF, callbacks/timers/fetch, retrait de tous les
+écouteurs/observateurs et destruction des matériaux d’eau, fenêtres et autres
+ressources V3. Les 989 fichiers géographiques V3 sont inchangés.
+
+## Validation V4A
+
+Installation propre (`npm ci`), TypeScript, **67 tests Vitest**, **10 tests Python**
+et build de production vérifiés. Cas ciblés : exemple solaire NREL SPA, horaires
+saisonniers Nantes, points cardinaux, crépuscule, Paris et les deux changements
+d’heure, partage caméra/ordonnanceur, arrêt/retard/réveil, fenêtre déterministe,
+uniformes partagés, masque de vue générale et destruction des matériaux.
+Les 989 assets V3 sont copiés à l’identique dans le build ; aucune donnée ajoutée.
+
+Chromium headless avec GPU logiciel : ordinateur 1 440 × 1 100, mobile simulé
+390 × 844 avec fuseau America/New_York et réduction des animations. Scènes de
+7 h, 14 h, 22 h et minuit testées ; captures de midi et de nuit inspectées. Curseur,
+lecture/pause, phases d’eau dans le shader WebGL, navigation pendant animation,
+masquage, changements d’heure, fermeture pendant chargement et remontage passent.
+Aucun asset manquant ni erreur applicative ou débordement horizontal observé.
+Au plus un rAF applicatif en attente ; aucun après fermeture ou au repos sans eau/lecture.
+
+Au château, la séquence logicielle d’eau mesurée a présenté des intervalles de
+**3,3 à 3,9 s** entre les dessins : ce n’est pas un benchmark GPU physique et
+l’animation reste très saccadée dans cet environnement. Le délai adaptatif rétablit
+les interactions. Le module Nantes passe de 624,7 à environ **637,6 ko** minifiés
+(de 161,2 à **165,6 ko gzip**), sans dépendance runtime supplémentaire.
+L’avertissement Vite de plus de 500 ko reste présent ; le module est chargé à la demande.
+
+Limites V4A : météo, relief et lune non pris en compte dans le calcul lumineux ;
+ambiance et fenêtres interprétées ; fenêtres proches seulement ; ombres rasantes
+coupées à 0,5° et actualisées par pas en lecture ; eau sans réflexion de scène ni
+simulation hydrodynamique. Les cadres détaillés restent coûteux sur GPU logiciel.
+Pas de mesures sur GPU physique, Safari ou téléphone réel.
+
+## Validation V3 et limites géographiques
 
 ```sh
 npm ci

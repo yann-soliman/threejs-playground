@@ -5,6 +5,8 @@ import {
 } from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { buildingBody, buildingRoof, buildingStyle, footprintShape, metres, paint, seedOf, signedArea } from './buildings';
+import { atmosphereUniforms, waterMaterial, windowIllumination, windowMaterial } from './atmosphere';
+import type { AtmosphereUniforms } from './atmosphere';
 import type { CityData, Point } from './types';
 
 export interface CityModel {
@@ -45,8 +47,9 @@ function ribbon(points: Point[], width: number, elevation: number): BufferGeomet
 
 export type DetailLevel = 'near' | 'medium' | 'far';
 
-export function createCity(data: CityData, options: { lod?: DetailLevel; ground?: boolean } = {}): CityModel {
+export function createCity(data: CityData, options: { lod?: DetailLevel; ground?: boolean; atmosphere?: AtmosphereUniforms } = {}): CityModel {
   const lod = options.lod ?? 'near';
+  const atmosphere = options.atmosphere ?? atmosphereUniforms();
   const group = new Group();
   const geometries = new Set<BufferGeometry>();
   const materials = new Set<MeshStandardMaterial>();
@@ -78,7 +81,7 @@ export function createCity(data: CityData, options: { lod?: DetailLevel; ground?
   top.position.y = 0.01;
   }
 
-  const surfaceParts: BufferGeometry[] = [];
+  const surfaceParts: BufferGeometry[] = [], waterParts: BufferGeometry[] = [];
   // Parcs d'abord, puis places, puis eau : ordre stable de superposition.
   const surfaces = [...data.surfaces].sort((a, b) => ({ green: 0, plaza: 1, water: 2 }[a.kind] - { green: 0, plaza: 1, water: 2 }[b.kind]));
   for (const feature of surfaces) {
@@ -86,9 +89,14 @@ export function createCity(data: CityData, options: { lod?: DetailLevel; ground?
     geometry = geometry.toNonIndexed();
     geometry.rotateX(-Math.PI / 2);
     geometry.translate(0, feature.kind === 'water' ? 0.075 : feature.kind === 'plaza' ? 0.055 : 0.035, 0);
-    surfaceParts.push(paint(geometry, new Color({ green: '#9fb48a', water: '#78aeb0', plaza: '#e0d5c0' }[feature.kind])));
+    if (feature.kind === 'water') waterParts.push(geometry);
+    else surfaceParts.push(paint(geometry, new Color(feature.kind === 'green' ? '#9fb48a' : '#e0d5c0')));
   }
   batch(surfaceParts, material('#ffffff', true), false);
+  if (waterParts.length) {
+    const water = waterMaterial(atmosphere); materials.add(water);
+    batch(waterParts, water, false);
+  }
 
   const pavementParts: BufferGeometry[] = [], roadParts: BufferGeometry[] = [];
   for (const road of data.roads) {
@@ -120,7 +128,7 @@ export function createCity(data: CityData, options: { lod?: DetailLevel; ground?
   batch(wallParts, material('#ffffff', true));
 
   const bodies: BufferGeometry[] = [], roofs: BufferGeometry[] = [], cornices: BufferGeometry[] = [];
-  const windowTransforms: { x: number; y: number; z: number; angle: number; w: number; h: number; lit: boolean }[] = [];
+  const windowTransforms: { x: number; y: number; z: number; angle: number; w: number; h: number; light: [number, number, number] }[] = [];
   let estimatedHeights = 0;
   for (const feature of data.buildings) {
     const style = buildingStyle(feature);
@@ -161,7 +169,7 @@ export function createCity(data: CityData, options: { lod?: DetailLevel; ground?
               z: a[1] + dz * t + nz * 0.11,
               y: style.base + 0.16 + (floor + 0.52) * floorHeight,
               angle: Math.atan2(nx, nz), w: shop ? 1.65 : 0.95 + seed % 3 * 0.12,
-              h: Math.min(floorHeight * 0.58, shop ? 2 : 1.6), lit: (seed + floor + column) % 11 === 0,
+              h: Math.min(floorHeight * 0.58, shop ? 2 : 1.6), light: windowIllumination(`${feature.id}:${r}:${i}:${floor}:${column}`),
             });
           }
         }
@@ -179,7 +187,10 @@ export function createCity(data: CityData, options: { lod?: DetailLevel; ground?
     return mesh;
   }
   const frames = instances(new PlaneGeometry(1, 1), material('#f0e5ce'), windowTransforms.length);
-  const windows = instances(new PlaneGeometry(1, 1), material('#ffffff'), windowTransforms.length);
+  const windowGeometry = new PlaneGeometry(1, 1);
+  const glass = windowMaterial(windowGeometry, windowTransforms.flatMap((w) => w.light), atmosphere);
+  materials.add(glass);
+  const windows = instances(windowGeometry, glass, windowTransforms.length);
   windowTransforms.forEach((w, i) => {
     dummy.position.set(w.x, w.y, w.z);
     dummy.rotation.set(0, w.angle, 0);
@@ -189,7 +200,7 @@ export function createCity(data: CityData, options: { lod?: DetailLevel; ground?
     dummy.position.z += Math.cos(w.angle) * 0.025;
     dummy.scale.set(w.w, w.h, 1);
     dummy.updateMatrix(); windows.setMatrixAt(i, dummy.matrix);
-    windows.setColorAt(i, new Color(w.lit ? '#b9ad85' : '#52666c'));
+    windows.setColorAt(i, new Color('#52666c'));
   });
   frames.computeBoundingSphere(); windows.computeBoundingSphere();
 

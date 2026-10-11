@@ -1,14 +1,15 @@
 import { DataTexture, NearestFilter, RedFormat, Mesh, MeshStandardMaterial, ShapeGeometry, Group, BufferGeometry, Float32BufferAttribute, LineLoop, LineBasicMaterial } from 'three';
 import { footprintShape } from './buildings';
+import type { AtmosphereUniforms } from './atmosphere';
 import { createCity } from './city';
 import type { CityData } from './types';
 import type { CityManifest, TileEntry } from './tiles';
 
 /** Masque commun des tuiles remplacées : la vue générale ne double pas leurs objets. */
-export function createOverview(data: CityData, manifest: CityManifest): {
+export function createOverview(data: CityData, manifest: CityManifest, atmosphere?: AtmosphereUniforms): {
   group: Group; setTile: (tile: TileEntry, active: boolean) => void; dispose: () => void;
 } {
-  const model = createCity(data, { lod: 'far', ground: false });
+  const model = createCity(data, { lod: 'far', ground: false, atmosphere });
   const minX = Math.floor(manifest.bounds[0]! / manifest.tileSize);
   const minZ = Math.floor(manifest.bounds[1]! / manifest.tileSize);
   const width = Math.ceil(manifest.bounds[2]! / manifest.tileSize) - minX;
@@ -20,14 +21,17 @@ export function createOverview(data: CityData, manifest: CityManifest): {
     if (!(object instanceof Mesh)) return;
     object.castShadow = false;
     const material = object.material as MeshStandardMaterial;
-    material.onBeforeCompile = (shader) => {
+    const compile = material.onBeforeCompile;
+    const programKey = material.customProgramCacheKey();
+    material.onBeforeCompile = (shader, renderer) => {
+      compile.call(material, shader, renderer);
       shader.uniforms.tileMask = { value: mask };
       shader.vertexShader = 'varying vec2 mapPosition;\n' + shader.vertexShader;
       shader.vertexShader = shader.vertexShader.replace('#include <worldpos_vertex>', '#include <worldpos_vertex>\nmapPosition = (modelMatrix * vec4(transformed, 1.0)).xz;');
       shader.fragmentShader = 'uniform sampler2D tileMask;\nvarying vec2 mapPosition;\n' + shader.fragmentShader;
       shader.fragmentShader = shader.fragmentShader.replace('#include <clipping_planes_fragment>', `#include <clipping_planes_fragment>\nvec2 tileUv = (mapPosition / ${manifest.tileSize.toFixed(1)} - vec2(${minX.toFixed(1)}, ${minZ.toFixed(1)})) / vec2(${width.toFixed(1)}, ${depth.toFixed(1)});\nif (texture2D(tileMask, tileUv).r > 0.5) discard;`);
     };
-    material.customProgramCacheKey = () => 'nantes-overview-mask';
+    material.customProgramCacheKey = () => `${programKey}-nantes-overview-mask`;
   });
   const group = new Group();
   const groundMaterial = new MeshStandardMaterial({ color: '#d4d2c4', roughness: 1 });

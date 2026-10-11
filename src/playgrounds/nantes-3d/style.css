@@ -59,3 +59,24 @@
 .nantes-diagnostics { margin-top: 12px; font-size: 11px; color: var(--muted); }
 .nantes-diagnostics summary { cursor: pointer; min-height: 30px; width: fit-content; }
 .nantes-diagnostics output { display: block; padding: 10px; background: #eef2eb; border-radius: 6px; line-height: 1.8; }
+
+.nantes-time { margin: 0 0 16px; padding: 12px 16px; background: #eef0e9; border: 1px solid #dbe1d6; border-radius: 12px; color: #405548; font-size: 12px; }
+.nantes-time-heading, .nantes-time-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 16px; }
+.nantes-time-heading label, .nantes-time-actions label { display: flex; align-items: center; gap: 6px; }
+.nantes-time input[type=date], .nantes-time select { border: 1px solid #cdd6cb; border-radius: 6px; background: #fff; padding: 5px; color: inherit; font: inherit; }
+.nantes-local-time { font-size: 22px; font-variant-numeric: tabular-nums; color: #283d31; }
+.nantes-hour { display: flex; align-items: center; gap: 12px; margin: 8px 0; }
+.nantes-hour input { flex: 1; min-width: 0; accent-color: #486d55; cursor: pointer; }
+.nantes-time button { padding: 6px 10px; border: 1px solid #cdd6cb; border-radius: 7px; background: #fff; color: inherit; font: inherit; cursor: pointer; }
+.nantes-time button[aria-pressed=true] { background: #d5e2d2; }
+.nantes-time button:disabled { cursor: default; opacity: .55; }
+.nantes-time input[type=checkbox] { accent-color: #486d55; }
+.nantes-time :focus-visible { outline: 2px solid #486d55; outline-offset: 3px; }
+.nantes-sun-events { margin-left: auto; font-variant-numeric: tabular-nums; }
+.nantes-time-note { margin: 8px 0 0; }
+@media (max-width: 600px) {
+  .nantes-time { padding: 10px; }
+  .nantes-time-heading { gap: 8px; }
+  .nantes-time-actions { gap: 8px; }
+  .nantes-sun-events { width: 100%; margin-left: 0; }
+}

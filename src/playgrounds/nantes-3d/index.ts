@@ -14,6 +14,10 @@ import { aerialPose, cityOverviewPose, CameraNavigator, cameraPosition, northPos
 import type { CameraPose } from './navigation';
 import { pointsOfInterest, selectPointOfInterest } from './pois';
 import type { PoiSelection } from './pois';
+import { AnimationScheduler } from './animation';
+import { atmosphereUniforms } from './atmosphere';
+import { SolarLighting } from './lighting';
+import { TimeControls, timePanel } from './time-controls';
 import './style.css';
 
 export function mount(container: HTMLElement): Cleanup {
@@ -27,6 +31,7 @@ export function mount(container: HTMLElement): Cleanup {
         <label class="nantes-poi-picker"><span>Lieux à explorer</span><select aria-label="Choisir un point d’intérêt" disabled><option value="">Choisir un lieu…</option></select></label>
         <span class="nantes-extent">Commune de Nantes <span aria-hidden="true">·</span> chargement progressif</span>
       </div>
+      ${timePanel}
       <div class="viewport nantes-viewport" tabindex="0" role="region" aria-label="Maquette 3D interactive de Nantes" aria-describedby="nantes-help">
         <p class="nantes-loading" role="status">Préparation de la maquette…</p>
         <button type="button" class="nantes-compass" data-action="north" aria-label="Orienter la vue vers le nord" title="Orienter vers le nord sans changer le centre, le zoom ni l’inclinaison (N)">
@@ -68,14 +73,16 @@ export function mount(container: HTMLElement): Cleanup {
   const scene = new Scene();
   scene.background = new Color('#e7ece5');
   scene.fog = new Fog('#e7ece5', 20000, 65000);
-  scene.add(new HemisphereLight('#fff8e7', '#919987', 2.5));
+  const ambient = new HemisphereLight('#fff8e7', '#919987', 2.5);
+  scene.add(ambient);
+  const atmosphere = atmosphereUniforms();
   const sun = new DirectionalLight('#fff1d5', 3);
   sun.position.set(-350, 700, 250);
   sun.castShadow = true;
   sun.shadow.mapSize.set(2048, 2048);
   sun.shadow.camera.left = -620; sun.shadow.camera.right = 620;
   sun.shadow.camera.top = 620; sun.shadow.camera.bottom = -620;
-  sun.shadow.camera.near = 1; sun.shadow.camera.far = 1800;
+  sun.shadow.camera.near = 1; sun.shadow.camera.far = 8500;
   sun.shadow.normalBias = 0.4;
   sun.shadow.bias = -0.00015;
   scene.add(sun, sun.target);
@@ -101,9 +108,8 @@ export function mount(container: HTMLElement): Cleanup {
   let loader: TileLoader<CityModel & TileResource> | undefined;
   let destination: Vector3 | undefined;
   let tileTimer: number | undefined;
-  let renderTimer: number | undefined;
   let sceneDirty = false;
-  let shadowCenter = new Vector3(Infinity, 0, Infinity);
+  const lighting = new SolarLighting(scene, renderer, sun, ambient, atmosphere);
   const diagnostics = container.querySelector<HTMLDetailsElement>('.nantes-diagnostics')!;
   let lastDraw = 0;
   let movementFps = 0;
@@ -124,16 +130,12 @@ export function mount(container: HTMLElement): Cleanup {
   const refreshDiagnostics = (): void => {
     if (diagnostics.open && loader) {
       const info = loader.info;
-      diagnostics.querySelector('output')!.textContent = `${navigator.active ? `Cadence instantanée : ${movementFps.toFixed(0)} images/s` : 'Au repos : rendu à la demande'} · ${info.active} tuiles · ${info.pending} requêtes · LOD proche/moyen/lointain : ${info.lod.near}/${info.lod.medium}/${info.lod.far} · ${renderer.info.render.calls} appels de dessin · ${renderer.info.render.triangles.toLocaleString('fr-FR')} triangles · buffers estimés : ${(info.bytes / 1048576).toFixed(1)} Mio (hors pilote GPU)`;
+      diagnostics.querySelector('output')!.textContent = `${navigator.active || timeControls.playing || waterActive() ? `Rendu animé : ${movementFps.toFixed(1)} images/s` : 'Au repos : rendu à la demande'} · ${info.active} tuiles · ${info.pending} requêtes · LOD proche/moyen/lointain : ${info.lod.near}/${info.lod.medium}/${info.lod.far} · ${renderer.info.render.calls} appels de dessin · ${renderer.info.render.triangles.toLocaleString('fr-FR')} triangles · buffers estimés : ${(info.bytes / 1048576).toFixed(1)} Mio (hors pilote GPU)`;
     }
   };
-  const requestDraw = (): void => {
-    if (renderTimer === undefined && !disposed) renderTimer = window.setTimeout(draw, 32);
-  };
-  const draw = (): void => {
+  const requestDraw = (): void => scheduler.invalidate();
+  const render = (): void => {
     if (disposed) return;
-    if (renderTimer !== undefined) window.clearTimeout(renderTimer);
-    renderTimer = undefined;
     sceneDirty = false;
     const heading = controls.getAzimuthalAngle();
     // Dérouler les angles évite un tour artificiel lors du passage de +π à −π.
@@ -141,19 +143,12 @@ export function mount(container: HTMLElement): Cleanup {
     previousHeading = heading;
     compass.style.setProperty('--heading', `${compassHeading}rad`);
     const distance = camera.position.distanceTo(controls.target);
-    const shadows = distance < 2400;
     if (scene.fog instanceof Fog) { scene.fog.near = Math.max(1600, distance * 1.15); scene.fog.far = Math.max(4000, distance * 2.2); }
-    if (sun.castShadow !== shadows) { sun.castShadow = shadows; renderer.shadowMap.needsUpdate = true; }
-    if (shadows && controls.target.distanceTo(shadowCenter) > 140) {
-      shadowCenter.copy(controls.target);
-      sun.target.position.copy(controls.target);
-      sun.position.copy(controls.target).add(new Vector3(-350, 700, 250));
-      renderer.shadowMap.needsUpdate = true;
-    }
+    lighting.prepare(controls.target, distance, performance.now());
     renderer.render(scene, camera);
     if (diagnostics.open) {
       const now = performance.now();
-      if (navigator.active && lastDraw && now - lastDraw < 1000) movementFps = 1000 / (now - lastDraw);
+      if ((navigator.active || timeControls.playing || waterActive()) && lastDraw && now > lastDraw) movementFps = 1000 / (now - lastDraw);
       lastDraw = now;
       refreshDiagnostics();
     }
@@ -164,6 +159,23 @@ export function mount(container: HTMLElement): Cleanup {
       if (visible) marker.style.transform = `translate(${(markerProjection.x + 1) * viewport.clientWidth / 2}px, ${(1 - markerProjection.y) * viewport.clientHeight / 2}px)`;
     } else marker.hidden = true;
   };
+  const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const waterActive = (): boolean => timeControls.waterPlaying && camera.position.distanceTo(controls.target) < 6500 && overview !== undefined;
+  const updateAnimation = (): void => scheduler.setContinuous(timeControls.playing || waterActive());
+  const timeControls = new TimeControls(container, () => {
+    lighting.select(timeControls.instant, true);
+    updateAnimation(); requestDraw();
+  });
+  timeControls.setReduced(motion.matches);
+  lighting.select(timeControls.instant, true);
+  const scheduler = new AnimationScheduler({
+    now: () => performance.now(),
+    request: (callback) => window.requestAnimationFrame(callback),
+    cancel: (id) => window.cancelAnimationFrame(id),
+  }, (seconds) => {
+    if (timeControls.advance(seconds)) lighting.select(timeControls.instant);
+    if (waterActive()) atmosphere.time.value += seconds;
+  }, render, () => navigator.active ? 24 : timeControls.playing ? 12 : 8);
   const readPose = (): CameraPose => readCameraPose(camera, controls.target);
   const applyPose = (pose: CameraPose): void => {
     controls.target.copy(pose.target);
@@ -171,14 +183,10 @@ export function mount(container: HTMLElement): Cleanup {
     // L’événement change assure le rendu ; aucune seconde frame pour le même pas.
     controls.update();
   };
-  const navigator = new CameraNavigator(readPose, applyPose, {
-    now: () => performance.now(),
-    request: (callback) => window.requestAnimationFrame(callback),
-    cancel: (id) => window.cancelAnimationFrame(id),
-  });
+  const navigator = new CameraNavigator(readPose, applyPose, scheduler);
   const aspect = (): number => viewport.clientWidth / Math.max(1, viewport.clientHeight);
   const moveTo = (pose: CameraPose): void => {
-    navigator.moveTo(pose, window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 1400);
+    navigator.moveTo(pose, motion.matches ? 0 : 1400);
   };
   const activeView = (id: string): void => {
     container.querySelectorAll<HTMLButtonElement>('[data-view]').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.view === id)));
@@ -206,7 +214,7 @@ export function mount(container: HTMLElement): Cleanup {
     announcement.textContent = `Lieu sélectionné : ${next.point.name}`;
     place.hidden = false;
     activeView(id);
-    draw();
+    requestDraw();
     moveTo(next.pose);
   };
   const setView = (view: string): void => {
@@ -226,7 +234,7 @@ export function mount(container: HTMLElement): Cleanup {
     if (disposed || !viewport.clientWidth || !viewport.clientHeight) return;
     renderer.setSize(viewport.clientWidth, viewport.clientHeight);
     camera.aspect = aspect();
-    camera.updateProjectionMatrix(); draw(); scheduleTiles();
+    camera.updateProjectionMatrix(); requestDraw(); scheduleTiles();
   };
   const zoom = (factor: number): void => {
     manualInteraction();
@@ -265,10 +273,27 @@ export function mount(container: HTMLElement): Cleanup {
   picker.addEventListener('change', selectChange);
   viewport.addEventListener('keydown', keydown);
   controls.addEventListener('start', manualInteraction);
-  const cameraChanged = (): void => { draw(); scheduleTiles(); };
-  const diagnosticChanged = (): void => { lastDraw = 0; draw(); };
+  const cameraChanged = (): void => { updateAnimation(); requestDraw(); scheduleTiles(); };
+  const diagnosticChanged = (): void => { lastDraw = 0; requestDraw(); };
   diagnostics.addEventListener('toggle', diagnosticChanged);
   controls.addEventListener('change', cameraChanged);
+  let inViewport = true;
+  const visibilityChanged = (): void => {
+    const hidden = document.hidden || !inViewport;
+    if (hidden) { navigator.cancel(); timeControls.pause(); }
+    scheduler.setHidden(hidden); updateAnimation();
+  };
+  const motionChanged = (): void => {
+    if (motion.matches) navigator.cancel();
+    timeControls.setReduced(motion.matches); updateAnimation(); requestDraw();
+  };
+  document.addEventListener('visibilitychange', visibilityChanged);
+  motion.addEventListener('change', motionChanged);
+  const intersection = new IntersectionObserver((entries) => {
+    inViewport = entries[0]?.isIntersecting ?? false; visibilityChanged();
+  });
+  intersection.observe(viewport);
+  scheduler.setHidden(document.hidden);
   const observer = new ResizeObserver(resize);
   observer.observe(viewport);
   // Premier cadrage immédiat au montage ; toutes les actions suivantes sont animées.
@@ -286,7 +311,7 @@ export function mount(container: HTMLElement): Cleanup {
       status.textContent = 'Préparation de la vue générale de Nantes…';
       const general = await fetchData<CityData>(base + data.overview, request.signal);
       if (disposed) return;
-      overview = createOverview(general, data);
+      overview = createOverview(general, data, atmosphere);
       scene.add(overview.group);
       loader = new TileLoader({
         fetch: (choice, signal) => fetchData<CityData>(base + choice.tile.urls[choice.lod], signal),
@@ -294,7 +319,7 @@ export function mount(container: HTMLElement): Cleanup {
           // Laisser le navigateur traiter les interactions entre deux lots de géométrie.
           await new Promise<void>((resolve) => window.setTimeout(resolve, 0));
           if (signal.aborted || disposed) throw new DOMException('Chargement annulé', 'AbortError');
-          const model = createCity(tileData, { lod: choice.lod, ground: false });
+          const model = createCity(tileData, { lod: choice.lod, ground: false, atmosphere });
           let bytes = 0;
           const geometries = new Set<BufferGeometry>();
           model.group.traverse((object) => {
@@ -308,8 +333,8 @@ export function mount(container: HTMLElement): Cleanup {
           });
           return { ...model, bytes };
         },
-        attach: (resource, tile) => { scene.add(resource.group); overview?.setTile(tile, true); renderer.shadowMap.needsUpdate = true; sceneDirty = true; },
-        detach: (resource, tile) => { scene.remove(resource.group); overview?.setTile(tile, false); renderer.shadowMap.needsUpdate = true; sceneDirty = true; },
+        attach: (resource, tile) => { scene.add(resource.group); overview?.setTile(tile, true); lighting.invalidateShadows(); sceneDirty = true; },
+        detach: (resource, tile) => { scene.remove(resource.group); overview?.setTile(tile, false); lighting.invalidateShadows(); sceneDirty = true; },
         changed: () => {
           if (disposed || !loader) return;
           const info = loader.info;
@@ -326,7 +351,7 @@ export function mount(container: HTMLElement): Cleanup {
       container.querySelector<HTMLElement>('.nantes-provenance')!.textContent = `Données OpenStreetMap / Geofabrik du ${new Date(data.meta.extractedAt).toLocaleDateString('fr-FR', { timeZone: 'Europe/Paris' })}. Limite communale officielle : Nantes, INSEE 44109 (API Découpage administratif). Le modèle n’est pas un relevé architectural.`;
       applyPose(cityOverviewPose(data.bounds, aspect()));
       status.hidden = true;
-      updateTiles(); draw();
+      updateAnimation(); updateTiles(); requestDraw();
     })
     .catch((error: unknown) => {
       if (disposed) return;
@@ -337,8 +362,10 @@ export function mount(container: HTMLElement): Cleanup {
   return () => {
     disposed = true;
     request.abort();
-    navigator.dispose();
-    observer.disconnect();
+    navigator.dispose(); scheduler.dispose(); timeControls.dispose();
+    observer.disconnect(); intersection.disconnect();
+    document.removeEventListener('visibilitychange', visibilityChanged);
+    motion.removeEventListener('change', motionChanged);
     container.removeEventListener('click', click);
     picker.removeEventListener('change', selectChange);
     viewport.removeEventListener('keydown', keydown);
@@ -346,7 +373,6 @@ export function mount(container: HTMLElement): Cleanup {
     controls.removeEventListener('change', cameraChanged);
     diagnostics.removeEventListener('toggle', diagnosticChanged);
     if (tileTimer !== undefined) window.clearTimeout(tileTimer);
-    if (renderTimer !== undefined) window.clearTimeout(renderTimer);
     controls.dispose();
     loader?.dispose();
     overview?.dispose();

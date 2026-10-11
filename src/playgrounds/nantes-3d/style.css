@@ -1,0 +1,29 @@
+.nantes-toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 14px; }
+.nantes-views { display: flex; gap: 4px; padding: 4px; background: #edeFE8; border-radius: 8px; }
+.nantes button { font: inherit; font-size: 12px; color: #47564a; background: transparent; border: 0; border-radius: 5px; cursor: pointer; min-height: 36px; padding: 8px 12px; }
+.nantes button:hover { background: #e1e6dc; }
+.nantes button[aria-pressed='true'] { background: #fff; color: #28634d; box-shadow: 0 1px 4px #27362315; }
+.nantes-extent { color: var(--muted); font-size: 11px; letter-spacing: .02em; }
+.nantes-viewport { height: clamp(350px, 52vw, 600px); background: #e7ece5; }
+.nantes-viewport:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+.nantes-loading { position: absolute; z-index: 2; top: 42%; left: 15%; width: 70%; padding: 18px; text-align: center; background: #fafaf8ef; border-radius: 8px; font-size: 14px; color: #47564a; }
+.nantes-compass { position: absolute; top: 18px; left: 20px; display: grid; justify-items: center; color: #435646; font-size: 10px; pointer-events: none; }
+.nantes-compass i { font-style: normal; font-size: 30px; line-height: 1.2; }
+.nantes-navigation { position: absolute; right: 16px; top: 16px; display: grid; background: #fffffff0; border: 1px solid #dce2db; border-radius: 7px; box-shadow: 0 3px 14px #43564610; }
+.nantes-navigation button { font-size: 20px; width: 40px; height: 40px; padding: 4px; }
+.nantes-navigation button + button { border-top: 1px solid #dce2db; border-radius: 0; }
+.nantes-attribution { position: absolute; right: 0; bottom: 0; padding: 6px 10px; font-size: 10px; color: #40594d; background: #ffffffe8; border-top-left-radius: 6px; text-decoration: underline; text-underline-offset: 2px; }
+.nantes-caption { display: flex; justify-content: space-between; gap: 16px; padding: 20px 0; border-bottom: 1px solid var(--border); color: var(--muted); font-size: 12px; line-height: 1.8; }
+.nantes-caption strong { color: #344639; font-weight: 600; }
+.nantes-stats { text-align: right; }
+.nantes-data { margin-top: 20px; color: var(--muted); font-size: 12px; line-height: 1.8; max-width: 85ch; }
+.nantes-data summary { cursor: pointer; width: fit-content; color: #28634d; min-height: 32px; }
+.nantes-data summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.nantes-data a { text-decoration: underline; text-underline-offset: 3px; }
+@media (max-width: 600px) {
+  .nantes-caption { display: block; }
+  .nantes-stats { display: block; text-align: left; margin-top: 8px; }
+  .nantes-views { width: 100%; justify-content: space-between; }
+  .nantes-views button { padding-inline: 9px; }
+  .nantes-viewport { height: 430px; }
+}

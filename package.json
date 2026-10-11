@@ -12,7 +12,9 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "nantes:prepare": "python3 -B src/playgrounds/nantes-3d/scripts/prepare.py",
+    "nantes:test-data": "python3 -B src/playgrounds/nantes-3d/scripts/test_prepare.py"
   },
   "dependencies": {
     "three": "^0.186.1"

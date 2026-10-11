@@ -48,7 +48,14 @@ tests/                    # Tests du routage et du catalogue
 
 L’accueil n’importe ni Three.js ni les expériences directement. Le catalogue contient uniquement les métadonnées et des fonctions `import()` : Vite produit des fichiers JavaScript séparés, chargés lors de l’ouverture d’un playground.
 
-**Nantes 3D** prépare une reconstruction interactive à partir d’OpenStreetMap. Pour l’instant, une grille navigable et un repère constituent une scène d’attente ; aucune donnée géographique n’est chargée. Le rendu fonctionne à la demande, sans boucle d’animation permanente. Un message est affiché si WebGL 2 est indisponible.
+**Nantes 3D** propose une première maquette du centre historique : Bouffay,
+le Château des ducs de Bretagne et les alentours de la cathédrale, avec 1 293
+empreintes de bâtiments OpenStreetMap. Les fenêtres, toits, routes, arbres et
+ombres composent un diorama navigable. Les données sont statiques ; aucune
+requête OSM n’est faite depuis le navigateur. Voir [les données, leur préparation,
+les estimations et les limites](src/playgrounds/nantes-3d/README.md).
+Le rendu fonctionne à la demande, sans boucle d’animation permanente. Un message
+est affiché si WebGL 2 est indisponible.
 
 ## Ajouter un playground
 

@@ -3,14 +3,8 @@ import { playgroundUrl } from './router';
 
 export function renderHome(container: HTMLElement): void {
   container.innerHTML = `
-    <section class="hero" aria-labelledby="home-title">
-      <p class="eyebrow"><span class="status-dot"></span> EXPÉRIENCES INTERACTIVES</p>
-      <h1 id="home-title">Une autre<br>dimension <span>à explorer.</span></h1>
-      <p class="hero-description">Des idées, du code et un peu de perspective.<br>Une collection d’explorations indépendantes en 3D.</p>
-      <div class="hero-coordinate" aria-hidden="true">X / Y / Z <span>↗</span></div>
-    </section>
-    <section class="collection" aria-labelledby="collection-title">
-      <div class="section-heading"><h2 id="collection-title">Les playgrounds</h2><span>01 expérience</span></div>
+    <section class="collection" aria-labelledby="home-title">
+      <h1 id="home-title">Playgrounds</h1>
       <div class="cards"></div>
     </section>`;
   const cards = container.querySelector('.cards')!;
@@ -21,7 +15,14 @@ export function renderHome(container: HTMLElement): void {
     const visual = document.createElement('div');
     visual.className = 'card-visual';
     visual.setAttribute('aria-hidden', 'true');
-    visual.innerHTML = '<div class="map-grid"></div><div class="map-river"></div><span class="map-pin">◇</span><span class="map-coordinate">47.2184° N / 1.5536° O</span><span class="visual-label">NANTES</span>';
+    visual.innerHTML = `<svg viewBox="0 0 480 240" xmlns="http://www.w3.org/2000/svg" focusable="false">
+      <defs><pattern id="map-grid-${entry.id}" width="32" height="32" patternUnits="userSpaceOnUse" patternTransform="rotate(-20)"><path d="M32 0H0V32" fill="none" stroke="#cddbd3" stroke-width="1"/></pattern></defs>
+      <rect width="480" height="240" fill="#e8f0e9"/>
+      <rect width="480" height="240" fill="url(#map-grid-${entry.id})"/>
+      <path d="M-30 200C90 200 120 100 235 124S340 67 510 60" fill="none" stroke="#b7d8e4" stroke-width="32"/>
+      <circle cx="240" cy="112" r="18" fill="#fff"/>
+      <circle cx="240" cy="112" r="6" fill="#28634d"/>
+    </svg>`;
     const content = document.createElement('div');
     content.className = 'card-content';
     const badge = document.createElement('span');
@@ -31,10 +32,10 @@ export function renderHome(container: HTMLElement): void {
     title.textContent = entry.title;
     const description = document.createElement('p');
     description.textContent = entry.description;
-    const action = document.createElement('span');
-    action.className = 'card-action';
-    action.textContent = 'Explorer le projet ↗';
-    content.append(badge, title, description, action);
+    const heading = document.createElement('div');
+    heading.className = 'card-heading';
+    heading.append(title, badge);
+    content.append(heading, description);
     card.append(visual, content);
     cards.append(card);
   }

@@ -8,11 +8,10 @@ import type { Cleanup } from '../../shared/playground';
 export function mount(container: HTMLElement): Cleanup {
   container.innerHTML = `
     <section class="experience" aria-labelledby="nantes-title">
-      <a class="back-link" href="#/">← Tous les playgrounds</a>
-      <div class="experience-heading"><div><p class="eyebrow">GÉOGRAPHIE / OPENSTREETMAP</p><h1 id="nantes-title">Nantes 3D</h1></div><span class="badge">En préparation</span></div>
-      <p class="experience-description">Reconstruction 3D interactive de Nantes à partir des données OpenStreetMap.</p>
-      <div class="viewport" aria-label="Scène 3D de préparation"><div class="viewport-note"><strong>La ville prend forme, bientôt.</strong><span>Cette scène d’attente ne contient pas encore de données OpenStreetMap.</span></div></div>
-      <p class="controls-help">Souris ou tactile : faites glisser pour tourner, faites défiler ou pincez pour zoomer.</p>
+      <a class="back-link" href="#/">← Playgrounds</a>
+      <div class="experience-heading"><h1 id="nantes-title">Nantes 3D</h1><span class="badge">En préparation</span></div>
+      <div class="viewport" aria-label="Scène 3D de préparation"><p class="viewport-note">Scène d’attente · Données OpenStreetMap à venir</p></div>
+      <p class="controls-help">Glisser pour tourner · Molette ou pincement pour zoomer</p>
     </section>`;
   const viewport = container.querySelector<HTMLElement>('.viewport')!;
   let renderer: WebGLRenderer;
@@ -20,18 +19,18 @@ export function mount(container: HTMLElement): Cleanup {
     renderer = new WebGLRenderer({ antialias: true });
   } catch {
     const help = container.querySelector<HTMLElement>('.controls-help')!;
-    help.textContent = 'La prévisualisation nécessite un navigateur compatible avec WebGL 2. Le projet reste en préparation.';
+    help.textContent = 'WebGL 2 est nécessaire pour afficher la scène.';
     return () => {};
   }
 
   const scene = new Scene();
-  scene.background = new Color('#101b21');
+  scene.background = new Color('#f0f4ef');
   const camera = new PerspectiveCamera(45, 1, 0.1, 100);
   camera.position.set(9, 9, 12);
-  const grid = new GridHelper(30, 30, '#4b8278', '#243b40');
+  const grid = new GridHelper(30, 30, '#96b0a0', '#d5dfd5');
   scene.add(grid);
   const geometry = new RingGeometry(1.2, 1.24, 64);
-  const material = new MeshBasicMaterial({ color: '#a8e6c3' });
+  const material = new MeshBasicMaterial({ color: '#28634d' });
   const marker = new Mesh(geometry, material);
   marker.rotation.x = -Math.PI / 2;
   marker.position.y = 0.02;

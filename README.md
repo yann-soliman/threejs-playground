@@ -2,6 +2,8 @@
 
 Une collection légère d’expériences 3D interactives et indépendantes, réalisée avec **Vite, TypeScript et Three.js**, sans framework d’interface.
 
+L’interface utilise un thème clair et un accueil minimal : titre, cartes des expériences et lien GitHub.
+
 Site cible : https://yann-soliman.github.io/threejs-playground/
 
 ## Installation

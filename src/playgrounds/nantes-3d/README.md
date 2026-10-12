@@ -1,9 +1,136 @@
-# Nantes 3D — V5A
+# Nantes 3D — V5B
 
 Diorama interactif de **toute la commune de Nantes**, dans l’architecture existante
 `mount(container): Cleanup`. Three.js, TypeScript strict, HTML/CSS natifs et fichiers
 statiques ; aucun backend, clé ou appel géographique depuis le navigateur.
 Lien : `#/playgrounds/nantes-3d`.
+
+## Exploration piétonne et mini-carte — V5B
+
+**Entrer et sortir.** Choisir un quartier en vue aérienne, puis **Mode piéton**.
+Le départ est cherché à moins de 400 m, sur un tracé OSM autorisé, avec une
+préférence pour chemins, rues piétonnes et rues résidentielles partagées.
+Les empreintes, l’eau, les murs, les accès et le terrain chargé sont vérifiés
+avant le déplacement. Une descente d’une seconde est annulable par **Vue aérienne** ;
+elle est immédiate avec la réduction des animations. La sortie conserve le
+quartier parcouru avec un cadrage aérien de 400 m, sans retour automatique au centre.
+Les boutons de zoom/reset sont réservés à la vue aérienne ; la boussole oriente
+le regard vers le nord dans les deux modes.
+
+**Commandes.** ZQSD ou WASD pour marcher ; Maj pour accélérer : 1,8 ou 3,6 m/s,
+avec diagonales normalisées. Cliquer dans la scène demande la capture de souris
+uniquement après ce geste ; Échap la libère. En cas de refus ou d’absence de
+Pointer Lock, glisser dans la scène permet de regarder. Les yeux sont à 1,70 m ;
+le regard vertical est borné à ±1,35 rad et le roulis est nul. Les touches agissent
+uniquement quand le viewport a le focus ou possède la capture ; les champs,
+boutons et liens restent utilisables. Sur mobile, glisser pour regarder et maintenir
+les quatre flèches de déplacement. Les contrôles fonctionnels restent actifs avec
+`prefers-reduced-motion`. **Inspecter devant soi** conserve la fiche bâtiment
+sans sélectionner pendant un geste de regard. Les POI restent sélectionnables ;
+**Rejoindre le lieu** confirme explicitement un nouveau départ sûr en mode piéton.
+
+**Collisions et relief.** Index CPU par cases de 25 m : empreintes OSM proches
+avec trous/cours, surfaces d’eau, espaces verts/places à accès restreint, murs
+avec largeur affichée et tracés routiers. Aucun mesh de collision
+ni rayon lancé contre l’ensemble des bâtiments. Disque de rayon 28 cm, déplacements
+subdivisés en pas d’au plus 12 cm et glissement par composantes le long des murs.
+L’altitude provient des triangles IGN réellement affichés au LOD proche, avec
+12 cm correspondant à la chaussée. Aucun terrain n’est reconstruit pendant la marche.
+Un dénivelé supérieur à 18 cm + 0,65 fois le déplacement horizontal est refusé,
+avec un contrôle anticipé à un mètre pour empêcher que les petits sous-pas
+ne rendent artificiellement franchissable une forte pente continue.
+Cette tolérance absorbe les petits écarts d’interpolation ; elle ne constitue pas
+un modèle biomécanique. Les cours sont accessibles lorsqu’un passage réel le permet.
+Les bâtiments sur pilotis restent des obstacles conservateurs.
+
+La préparation conserve le tag **`foot`** et ses restrictions dans les trois LOD.
+`foot` prévaut sur `access` ; `no`, `private` et `customers` sont refusés. Autoroutes,
+voies rapides, constructions, escaliers, tunnels et niveaux négatifs sont exclus.
+Les niveaux positifs sans pont sont refusés. Sur un pont possédant un tablier V4B,
+la marche suit ce niveau estimé plutôt que le fond du fleuve ; les ponts sans
+niveau connu restent interdits. Eau et bordures d’eau sont bloquées hors tablier.
+Les règles conditionnelles, clôtures absentes d’OSM et accès privés non renseignés
+ne peuvent pas être déduits. Ce mode n’est pas un calcul d’itinéraire accessible.
+
+**Tuiles.** Jusqu’à six tuiles proches, indépendamment du frustum étroit piéton,
+avec anticipation à 180 m dans la direction du regard et priorité maximale
+pour la tuile portant le piéton. Les budgets existants
+96 Mio / 48 Mio et caches de 24 tuiles sont conservés. Une tuile n’est déclarée
+marchable qu’après attachement de son modèle proche et de ses données IGN.
+La couverture du disque est vérifiée avant chaque pas : à une frontière non
+chargée, rester à la dernière position valide, puis reprendre avec les touches
+maintenues lorsque les données arrivent. La mini-carte et les POI ne déplacent
+jamais implicitement un piéton ; « Aller ici » lance la validation du départ.
+Une destination invalide garde la dernière position et propose un autre lieu
+ou la sortie du mode. Une erreur définitive de tuile demande un rechargement.
+
+**Mini-carte.** Deux Canvas 2D superposés : fond OSM vectoriel mis en cache,
+indicateurs légers de position, direction, POI et secteur aérien approximatif.
+Le fond utilise la vue générale et les surfaces d’eau existantes ; aucun service
+de carte, chargement des 329 tuiles ni renderer WebGL supplémentaire.
+Nord en haut : X vers l’est, Z vers le sud, échelle identique sur les deux axes.
+La projection WGS84 reste celle de Nantes (`projectCoordinates`), puis la carte
+applique une translation et une échelle en mètres ; la sélection utilise l’inverse.
+En compact, elle suit la cible aérienne ou le piéton ; le fond est redessiné après
+un déplacement de 7 % de sa largeur, les indicateurs au rythme des dessins de scène.
+**Agrandir** : glisser pour déplacer, molette ou +/− pour zoomer entre 300 et
+16 000 m de largeur, cliquer pour choisir, **Aller ici** pour confirmer.
+Au clavier : flèches, +/−, Entrée pour choisir le centre ; boutons natifs pour
+confirmer/suivre/réduire. Les POI sont dessinés et nommés en vue agrandie.
+L’attribution OpenStreetMap reste visible sur la scène et la carte.
+
+**Coût et cycle de vie.** Le même AnimationScheduler pilote marche, descente,
+caméra aérienne, eau, véhicules et soleil. Rendu continu seulement pour mouvement
+ou animation ; au repos, rendu à la demande. Pas de seconde boucle rAF. Perte de focus,
+masquage, sortie du viewport, annulation de capture et changement de mode relâchent
+les commandes. Démontage : écouteurs, capture, observer, Canvas et index libérés.
+La cadence cible reste 24 images/s ; les déplacements utilisent le temps écoulé,
+avec un plafond de 2 s par pas de simulation sur un appareil extrêmement lent
+pour éviter un bond prolongé. Les sous-pas conservent les collisions à faible cadence.
+En mode piéton : pixel ratio limité à 1, distance de rendu 2 km, brouillard local
+et zone d’ombre ±180 m ; détails architecturaux proches conservés.
+
+**Limites.** Glissement par axes, pas de moteur physique, saut, intérieur, escalier
+ni navigation à plusieurs niveaux. Fragments routiers et tabliers simplifiés ;
+certains espaces réellement accessibles peuvent être refusés. Les intersections
+d’accès sont traitées conservativement. La carte représente surtout les axes
+principaux de la vue générale ; elle n’est pas un fond cadastral exhaustif.
+La représentation IGN des triangles à 20 m peut différer localement du MNT natif
+à 5 m. Pas de garantie de fluidité sur GPU logiciel ou téléphone peu puissant.
+
+### Validation V5B — 12 octobre 2026
+
+`npm ci`, `npm run typecheck`, `npm test` (**101 tests Vitest**, dont 16 tests
+piéton/carte), `npm run nantes:test-data` (**19 tests Python**) et
+`npm run build` réussis. Les tests couvrent aussi une vraie frontière de tuile
+Nantes avec les triangles IGN et les empreintes des deux propriétaires : cette
+traversée est une simulation automatisée CPU, pas une traversée filmée au navigateur.
+Les 989 fichiers OSM sont identiques à la préparation hors réseau du PBF existant ;
+les 331 fichiers IGN sont inchangés. Les 1 320 JSON sont présents et identiques
+sous `dist/nantes/`. Ajout de `foot` : 6 248 fragments proches renseignés,
+231 810 octets supplémentaires de fichiers OSM, sans modification géométrique.
+
+Production testée sous Chromium : ordinateur 1 440 × 1 100, mobile simulé
+390 × 844 avec tactile et réduction des animations. Bouffay, Île de Nantes et
+Chantenay ; marche, blocage effectif contre une façade, saisie dans un champ,
+regard tactile, capture/Échap, regard par glissement sans capture, carte agrandie,
+zoom/pan/sélection au clavier, confirmation d’un déplacement, POI sans déplacement
+implicite, retour aérien, interruption et démontage vérifiés. Une façade réelle
+(`way/85438998`) a été inspectée depuis la rue. Captures des rues et des cartes
+sur ordinateur/mobile inspectées. Aucune erreur JavaScript applicative, erreur
+HTTP d’asset ni débordement horizontal observé. Eau, 32 véhicules et lecture
+solaire ont également fonctionné ensemble ; maximum **un rAF natif**, zéro au
+repos sans animations, au masquage et après démontage.
+
+Le rendu utilise un **GPU logiciel** : sur le court appui de marche mesuré à
+Bouffay, deux intervalles de dessin de **3 500 et 3 692 ms**, soit environ
+**0,28 image/s** ; cette expérience reste très lente dans cet environnement.
+À Bouffay : quatre tuiles / **74,6 Mio** de buffers estimés sur ordinateur,
+trois tuiles / **42,6 Mio** sur mobile simulé ; à Chantenay : **92,7 / 44,7 Mio**.
+Ces nombres excluent le pilote et ne mesurent pas la mémoire GPU effective.
+Pas de mesure sur GPU physique, téléphone réel ou Safari. Le bundle reste chargé
+à la demande, sans nouvelle dépendance ; l’avertissement Vite existant au-delà de
+500 ko demeure.
 
 ## Ville interactive — V5A
 

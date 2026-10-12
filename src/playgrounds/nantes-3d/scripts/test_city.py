@@ -22,12 +22,13 @@ class MunicipalDataTests(unittest.TestCase):
 
     def test_traffic_tags_survive_offline_extraction(self):
         from prepare_city import KEEP
-        for key in ('oneway', 'lanes', 'access', 'motor_vehicle', 'vehicle', 'bridge', 'tunnel', 'layer'):
+        for key in ('foot', 'oneway', 'lanes', 'access', 'motor_vehicle', 'vehicle', 'bridge', 'tunnel', 'layer'):
             self.assertIn(key, KEEP)
         roads=[road for tile in self.tiles for road in tile['roads']]
         self.assertTrue(any(road['tags'].get('oneway') == '-1' for road in roads))
         self.assertTrue(any(road['tags'].get('motor_vehicle') == 'no' for road in roads))
         self.assertTrue(any(road['tags'].get('access') == 'private' for road in roads))
+        self.assertTrue(any(road['tags'].get('foot') == 'no' for road in roads))
         # Les restrictions restent identiques lors de la simplification des tracés.
         for entry,near in zip(self.manifest['tiles'],self.tiles):
             tags={road['id']:road['tags'] for road in near['roads']}

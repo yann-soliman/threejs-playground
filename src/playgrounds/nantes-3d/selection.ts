@@ -51,8 +51,9 @@ export class BuildingSelection {
   removeTile(id: string): void { this.tiles.delete(id); }
   reconcile(): void { if (this.selected && !this.tiles.get(this.selected.tile)?.buildings.has(this.selected.feature.id)) this.clear(); }
   pick(ray: Ray): Feature | undefined {
-    if (ray.direction.y >= -.001) { this.clear(); return undefined; }
-    const start = Math.max(0, (ray.origin.y - 260) / -ray.direction.y), end = (ray.origin.y + 10) / -ray.direction.y;
+    const descending = ray.direction.y < -.001;
+    const start = descending ? Math.max(0, (ray.origin.y - 260) / -ray.direction.y) : 0;
+    const end = descending ? Math.min(25000, (ray.origin.y + 10) / -ray.direction.y) : 1500;
     const a = ray.at(start, new Vector3()), b = ray.at(end, new Vector3());
     const count = Math.min(2000, Math.ceil(Math.hypot(a.x - b.x, a.z - b.z) / 20));
     const candidates = new Set<PickBuilding>();
@@ -64,9 +65,11 @@ export class BuildingSelection {
     let nearest = Infinity, selected: PickBuilding | undefined;
     for (const building of candidates) {
       if (!ray.intersectsBox(building.box)) continue;
-      const top = building.box.max.y, roofDistance = (top - ray.origin.y) / ray.direction.y;
-      const roof = ray.at(roofDistance, new Vector3());
-      if (roofDistance >= 0 && roofDistance < nearest && inFootprint(building.feature, roof.x, roof.z)) { nearest = roofDistance; selected = building; }
+      const top = building.box.max.y;
+      if (Math.abs(ray.direction.y) > 1e-8) {
+        const roofDistance = (top - ray.origin.y) / ray.direction.y, roof = ray.at(roofDistance, new Vector3());
+        if (roofDistance >= 0 && roofDistance < nearest && inFootprint(building.feature, roof.x, roof.z)) { nearest = roofDistance; selected = building; }
+      }
       for (const ring of building.feature.rings) for (let i = 0; i < ring.length; i++) {
         const p = ring[i]!, q = ring[(i + 1) % ring.length]!, dx = q[0] - p[0], dz = q[1] - p[1];
         const det = ray.direction.x * dz - ray.direction.z * dx; if (Math.abs(det) < 1e-8) continue;

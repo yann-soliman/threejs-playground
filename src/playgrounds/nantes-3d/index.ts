@@ -23,6 +23,9 @@ import { TimeControls, timePanel } from './time-controls';
 import { Traffic } from './traffic';
 import type { TrafficDensity } from './traffic';
 import { BuildingSelection, buildingInformation, isSelectionClick } from './selection';
+import { WalkingWorld, Walker, walkingTiles, EYE_HEIGHT } from './walking';
+import { PedestrianInput } from './pedestrian-input';
+import { Minimap } from './minimap';
 import './style.css';
 
 type InteractiveTile = CityModel & TileResource & { data: CityData; lod: DetailLevel };
@@ -38,8 +41,10 @@ export function mount(container: HTMLElement): Cleanup {
         <label class="nantes-poi-picker"><span>Lieux à explorer</span><select aria-label="Choisir un point d’intérêt" disabled><option value="">Choisir un lieu…</option></select></label>
         <span class="nantes-extent">Commune de Nantes <span aria-hidden="true">·</span> chargement progressif</span>
       </div>
+      <div class="nantes-modes" aria-label="Mode de caméra"><button type="button" data-mode="aerial" aria-pressed="true">Vue aérienne</button><button type="button" data-mode="pedestrian" aria-pressed="false" disabled>Mode piéton</button><button type="button" data-action="inspect" hidden>Inspecter devant soi</button></div>
       ${timePanel}
       <div class="viewport nantes-viewport" tabindex="0" role="region" aria-label="Maquette 3D interactive de Nantes" aria-describedby="nantes-help">
+        <div class="nantes-walk-pad" hidden aria-label="Déplacements piétons"><button type="button" data-walk="forward" aria-label="Avancer">↑</button><button type="button" data-walk="left" aria-label="Pas à gauche">←</button><button type="button" data-walk="back" aria-label="Reculer">↓</button><button type="button" data-walk="right" aria-label="Pas à droite">→</button></div>
         <p class="nantes-loading" role="status">Préparation de la maquette…</p>
         <button type="button" class="nantes-compass" data-action="north" aria-label="Orienter la vue vers le nord" title="Orienter vers le nord sans changer le centre, le zoom ni l’inclinaison (N)">
           <span class="nantes-compass-rose" aria-hidden="true">
@@ -53,11 +58,12 @@ export function mount(container: HTMLElement): Cleanup {
         </div>
         <a class="nantes-attribution" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">© OpenStreetMap contributors · ODbL</a>
       </div>
+      <p class="nantes-walk-help" id="nantes-walk-help" hidden role="status">ZQSD / WASD · Maj pour accélérer · Cliquer dans la scène pour regarder autour de soi · Échap libère la souris · Sur écran tactile : glisser pour regarder, flèches pour marcher.</p>
       <p class="nantes-terrain-source">Relief IGN RGE ALTI · NGF-IGN69 · échelle verticale 1:1 · <a href="https://geoservices.ign.fr/rgealti" target="_blank" rel="noopener noreferrer">Source</a> · <a href="https://www.etalab.gouv.fr/licence-ouverte-open-licence/" target="_blank" rel="noopener noreferrer">Licence ouverte</a></p>
       <p class="controls-help" id="nantes-help">Glisser pour tourner · Molette pour zoomer · Clic droit ou deux doigts pour déplacer · Clavier : flèches, +, −, R pour réinitialiser et N pour le nord</p>
       <label class="nantes-traffic">Circulation <select aria-label="Circulation"><option value="off">Désactivée</option><option value="low">Faible</option><option value="normal" selected>Normale</option></select><small>Cliquer sur un bâtiment pour l’inspecter.</small></label>
       <div class="nantes-building" hidden aria-live="polite"><div><strong></strong><dl></dl><a target="_blank" rel="noopener noreferrer">Voir le bâtiment sur OpenStreetMap ↗</a></div><button type="button" aria-label="Fermer la fiche du bâtiment">×</button></div>
-      <div class="nantes-place" hidden><span><strong class="nantes-place-name"></strong><a class="nantes-place-link" target="_blank" rel="noopener noreferrer">Voir sur OpenStreetMap ↗</a></span><button type="button" data-action="clear-poi" aria-label="Masquer le repère du lieu" title="Masquer le repère">×</button></div>
+      <div class="nantes-place" hidden><span><strong class="nantes-place-name"></strong><a class="nantes-place-link" target="_blank" rel="noopener noreferrer">Voir sur OpenStreetMap ↗</a></span><button type="button" data-action="walk-poi">Rejoindre le lieu</button><button type="button" data-action="clear-poi" aria-label="Masquer le repère du lieu" title="Masquer le repère">×</button></div>
       <span class="nantes-sr-only nantes-announcement" role="status"></span>
       <div class="nantes-caption"><span><strong>Nantes · Loire & Erdre</strong><br>Empreintes réelles, architecture interprétée</span><span class="nantes-stats" role="status"></span></div>
       <details class="nantes-diagnostics"><summary>Diagnostic du rendu</summary><output></output></details>
@@ -136,6 +142,16 @@ export function mount(container: HTMLElement): Cleanup {
   let terrainStore: TerrainStore | undefined;
   const terrainFiles = new Map<string, string>();
   let loader: TileLoader<InteractiveTile> | undefined;
+  let world: WalkingWorld | undefined;
+  let walker: Walker | undefined;
+  let pedestrianInput: PedestrianInput | undefined;
+  let minimap: Minimap | undefined;
+  let mode: 'aerial' | 'pedestrian' = 'aerial';
+  let pendingSpawn: Vector3 | undefined;
+  let entry: { from: Vector3; to: Vector3; start: number } | undefined;
+  let lastWalkingBlock: Walker['blocked'];
+  const walkHelp = container.querySelector<HTMLElement>('.nantes-walk-help')!;
+  const walkPad = container.querySelector<HTMLElement>('.nantes-walk-pad')!;
   let destination: Vector3 | undefined;
   let tileTimer: number | undefined;
   let sceneDirty = false;
@@ -148,7 +164,7 @@ export function mount(container: HTMLElement): Cleanup {
   const updateTiles = (): void => {
     tileTimer = undefined;
     if (disposed || !manifest || !loader) return;
-    loader.update(selectTiles(manifest, camera, controls.target, loader.levels, destination, aspect() < 1 ? 10 : 16));
+    loader.update(mode === 'pedestrian' && walker ? walkingTiles(manifest, pendingSpawn ?? walker.position, walker.yaw) : selectTiles(manifest, camera, controls.target, loader.levels, destination, aspect() < 1 ? 10 : 16));
   };
   const scheduleTiles = (): void => {
     if (tileTimer === undefined && !disposed) tileTimer = window.setTimeout(updateTiles, 80);
@@ -163,7 +179,7 @@ export function mount(container: HTMLElement): Cleanup {
     return fine ? tileElevation(fine, x, z) : sampleElevation(terrainOverview.grid, x, z);
   };
   const fitCamera = (): void => {
-    if (!terrainOverview) return;
+    if (!terrainOverview || mode === 'pedestrian') return;
     const delta = elevationAt(controls.target.x, controls.target.z) - controls.target.y;
     controls.target.y += delta; camera.position.y += delta;
     camera.position.y = Math.max(camera.position.y, elevationAt(camera.position.x, camera.position.z) + 3);
@@ -172,7 +188,7 @@ export function mount(container: HTMLElement): Cleanup {
   const refreshDiagnostics = (): void => {
     if (diagnostics.open && loader) {
       const info = loader.info;
-      diagnostics.querySelector('output')!.textContent = `${navigator.active || timeControls.playing || waterActive() || traffic.count > 0 ? `Rendu animé : ${movementFps.toFixed(1)} images/s` : 'Au repos : rendu à la demande'} · ${info.active} tuiles · ${info.pending} requêtes · LOD proche/moyen/lointain : ${info.lod.near}/${info.lod.medium}/${info.lod.far} · ${renderer.info.render.calls} appels de dessin · ${renderer.info.render.triangles.toLocaleString('fr-FR')} triangles · relief 20/50/100 m · buffers estimés : ${(info.bytes / 1048576).toFixed(1)} Mio (hors pilote GPU) · ${traffic.count} véhicules · ${traffic.drawCalls} appels circulation · eau ${waterActive() ? 'animée' : 'figée'}`;
+      diagnostics.querySelector('output')!.textContent = `${mode === 'pedestrian' ? `Mode piéton · X ${walker!.position.x.toFixed(1)}, Z ${walker!.position.z.toFixed(1)} m · sol ${(walker!.position.y - EYE_HEIGHT).toFixed(2)} m NGF · ${world!.count} tuiles proches · collision ${walker!.blocked ? ({ loading: 'chargement', obstacle: 'obstacle', water: 'eau', access: 'accès interdit', slope: 'pente refusée' })[walker!.blocked] : 'prête'} · ` : 'Vue aérienne · '}${walker?.moving || entry || navigator.active || timeControls.playing || waterActive() || traffic.count > 0 ? `Rendu animé : ${movementFps.toFixed(1)} images/s` : 'Au repos : rendu à la demande'} · ${info.active} tuiles · ${info.pending} requêtes · LOD proche/moyen/lointain : ${info.lod.near}/${info.lod.medium}/${info.lod.far} · ${renderer.info.render.calls} appels de dessin · ${renderer.info.render.triangles.toLocaleString('fr-FR')} triangles · relief 20/50/100 m · buffers estimés : ${(info.bytes / 1048576).toFixed(1)} Mio (hors pilote GPU) · ${traffic.count} véhicules · ${traffic.drawCalls} appels circulation · eau ${waterActive() ? 'animée' : 'figée'}`;
     }
   };
   const requestDraw = (): void => scheduler.invalidate();
@@ -180,18 +196,20 @@ export function mount(container: HTMLElement): Cleanup {
     if (disposed) return;
     sceneDirty = false;
     fitCamera();
-    const heading = controls.getAzimuthalAngle();
+    const heading = mode === 'pedestrian' && walker ? walker.yaw : controls.getAzimuthalAngle();
     // Dérouler les angles évite un tour artificiel lors du passage de +π à −π.
     compassHeading += shortestAngle(previousHeading, heading);
     previousHeading = heading;
     compass.style.setProperty('--heading', `${compassHeading}rad`);
     const distance = camera.position.distanceTo(controls.target);
-    if (scene.fog instanceof Fog) { scene.fog.near = Math.max(1600, distance * 1.15); scene.fog.far = Math.max(4000, distance * 2.2); }
+    if (scene.fog instanceof Fog && mode === 'pedestrian') { scene.fog.near = 450; scene.fog.far = 1800; }
+    else if (scene.fog instanceof Fog) { scene.fog.near = Math.max(1600, distance * 1.15); scene.fog.far = Math.max(4000, distance * 2.2); }
     lighting.prepare(controls.target, distance, performance.now());
+    minimap?.update({ position: mode === 'pedestrian' && walker ? walker.position : controls.target, yaw: heading, pedestrian: mode === 'pedestrian', distance }, performance.now(), true);
     renderer.render(scene, camera);
     if (diagnostics.open) {
       const now = performance.now();
-      if ((navigator.active || timeControls.playing || waterActive() || traffic.count > 0) && lastDraw && now > lastDraw) movementFps = 1000 / (now - lastDraw);
+      if ((walker?.moving || entry || navigator.active || timeControls.playing || waterActive() || traffic.count > 0) && lastDraw && now > lastDraw) movementFps = 1000 / (now - lastDraw);
       lastDraw = now;
       refreshDiagnostics();
     }
@@ -205,7 +223,7 @@ export function mount(container: HTMLElement): Cleanup {
   };
   const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
   const waterActive = (): boolean => timeControls.waterPlaying && camera.position.distanceTo(controls.target) < 6500 && overview !== undefined;
-  const updateAnimation = (): void => scheduler.setContinuous(timeControls.playing || waterActive() || traffic.count > 0 && !motion.matches);
+  const updateAnimation = (): void => scheduler.setContinuous(!!entry || !!walker?.moving || timeControls.playing || waterActive() || traffic.count > 0 && !motion.matches);
   const timeControls = new TimeControls(container, () => {
     lighting.select(timeControls.instant, true);
     updateAnimation(); requestDraw();
@@ -217,10 +235,22 @@ export function mount(container: HTMLElement): Cleanup {
     request: (callback) => window.requestAnimationFrame(callback),
     cancel: (id) => window.cancelAnimationFrame(id),
   }, (seconds) => {
+    if (mode === 'pedestrian' && walker && !pendingSpawn) {
+      if (entry) {
+        const progress = motion.matches ? 1 : Math.min(1, (performance.now() - entry.start) / 1000);
+        camera.position.copy(entry.from).lerp(entry.to, progress * progress * (3 - 2 * progress));
+        camera.rotation.set(walker.pitch, walker.yaw, 0, 'YXZ');
+        if (progress === 1) { entry = undefined; applyWalkingCamera(); updateAnimation(); }
+      } else if (walker.advance(performance.now())) { applyWalkingCamera(); scheduleTiles(); }
+      if (!pendingSpawn && !entry && walker.blocked !== lastWalkingBlock) {
+        lastWalkingBlock = walker.blocked;
+        walkHelp.textContent = walker.blocked ? ({ loading: 'Chargement du terrain voisin… Position conservée.', slope: 'Pente ou dénivelé trop important : passage bloqué.', obstacle: 'Obstacle : contourner le bâtiment ou le mur.', water: 'Bord de l’eau : passage bloqué.', access: 'Accès piéton interdit ou surface non prise en charge.' })[walker.blocked] : walkingMessage;
+      }
+    }
     if (timeControls.advance(seconds)) lighting.select(timeControls.instant);
     if (waterActive()) atmosphere.time.value += seconds;
     if (!motion.matches) traffic.update(seconds);
-  }, render, () => navigator.active || traffic.count || waterActive() ? 24 : 12);
+  }, render, () => walker?.moving || entry || navigator.active || traffic.count || waterActive() ? 24 : 12);
   const readPose = (): CameraPose => readCameraPose(camera, controls.target);
   const applyPose = (pose: CameraPose): void => {
     controls.target.copy(pose.target);
@@ -230,6 +260,60 @@ export function mount(container: HTMLElement): Cleanup {
   };
   const navigator = new CameraNavigator(readPose, applyPose, scheduler);
   const aspect = (): number => viewport.clientWidth / Math.max(1, viewport.clientHeight);
+  const walkingMessage = 'ZQSD / WASD · Maj pour accélérer · Cliquer dans la scène pour regarder autour de soi · Échap libère la souris · Tactile : glisser et flèches.';
+  const applyWalkingCamera = (): void => {
+    if (!walker) return;
+    camera.position.copy(walker.position); camera.rotation.set(walker.pitch, walker.yaw, 0, 'YXZ');
+    controls.target.copy(walker.position); controls.target.y -= EYE_HEIGHT;
+    camera.updateMatrixWorld(); requestDraw();
+  };
+  const resolveSpawn = (): void => {
+    if (mode !== 'pedestrian' || !pendingSpawn || !world || !walker) return;
+    const spawn = world.spawn(pendingSpawn);
+    if (!spawn) {
+      walkHelp.textContent = loader?.info.pending ? 'Recherche d’un départ piéton sûr…' : 'Aucun départ piéton sûr disponible ici. Choisir un autre lieu ou revenir en vue aérienne.';
+      return;
+    }
+    const relocating = walker.position.lengthSq() > 0;
+    walker.blocked = lastWalkingBlock = undefined; walker.yaw = world.heading(spawn, walker.yaw); walker.position.copy(spawn); pendingSpawn = undefined;
+    walkHelp.textContent = walkingMessage;
+    if (!relocating && !motion.matches) entry = { from: camera.position.clone(), to: spawn.clone(), start: performance.now() };
+    else applyWalkingCamera();
+    scheduleTiles(); updateAnimation(); requestDraw(); viewport.focus({ preventScroll: true });
+  };
+  const setMode = (next: 'aerial' | 'pedestrian'): void => {
+    if (!walker || !world || mode === next) return;
+    navigator.cancel(); pedestrianInput?.release(); entry = undefined;
+    if (next === 'pedestrian') {
+      pendingSpawn = controls.target.clone(); walker.position.set(0, 0, 0); walker.yaw = readPose().azimuth; walker.pitch = 0;
+      controls.enabled = false; camera.near = .15; camera.updateProjectionMatrix();
+    } else {
+      const target = walker.position.lengthSq() ? walker.position.clone() : pendingSpawn!.clone(); target.y = elevationAt(target.x, target.z);
+      pendingSpawn = undefined; controls.enabled = true; camera.near = 2; camera.updateProjectionMatrix();
+      mode = next; applyPose({ target, distance: 400, polar: .85, azimuth: walker.yaw });
+    }
+    camera.far = next === 'pedestrian' ? 2000 : 100000; camera.updateProjectionMatrix();
+    const shadowExtent = next === 'pedestrian' ? 180 : 620;
+    sun.shadow.camera.left = -shadowExtent; sun.shadow.camera.right = shadowExtent;
+    sun.shadow.camera.top = shadowExtent; sun.shadow.camera.bottom = -shadowExtent;
+    sun.shadow.camera.updateProjectionMatrix(); lighting.invalidateShadows();
+    container.querySelector<HTMLElement>('#nantes-help')!.hidden = next === 'pedestrian';
+    container.querySelector<HTMLElement>('.nantes-traffic small')!.textContent = next === 'pedestrian' ? 'Utiliser « Inspecter devant soi » pour consulter un bâtiment.' : 'Cliquer sur un bâtiment pour l’inspecter.';
+    mode = next; container.querySelector<HTMLButtonElement>('[data-action=inspect]')!.hidden = next !== 'pedestrian'; walkHelp.hidden = walkPad.hidden = next !== 'pedestrian';
+    viewport.classList.toggle('is-pedestrian', next === 'pedestrian');
+    viewport.setAttribute('aria-describedby', next === 'pedestrian' ? 'nantes-walk-help' : 'nantes-help');
+    container.querySelectorAll<HTMLButtonElement>('[data-mode]').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.mode === next)));
+    container.querySelectorAll<HTMLButtonElement>('.nantes-navigation button').forEach((button) => { button.disabled = next === 'pedestrian'; });
+    renderer.setPixelRatio(next === 'pedestrian' ? Math.min(window.devicePixelRatio, 1) : Math.min(window.devicePixelRatio, 1.5)); resize();
+    updateTiles(); resolveSpawn(); updateAnimation(); requestDraw();
+  };
+  const travelTo = (point: Vector3): void => {
+    if (mode === 'pedestrian') {
+      pedestrianInput?.release(); entry = undefined; walker!.stop(); pendingSpawn = point.clone();
+      // Le déplacement n'est confirmé qu'après validation : garder l'ancienne position.
+      walkHelp.textContent = 'Validation du départ à la destination…'; updateTiles(); resolveSpawn(); updateAnimation();
+    } else moveTo({ ...readPose(), target: new Vector3(point.x, elevationAt(point.x, point.z), point.z), distance: 550 });
+  };
   const moveTo = (pose: CameraPose): void => {
     navigator.moveTo(pose, motion.matches ? 0 : 1400);
   };
@@ -260,15 +344,16 @@ export function mount(container: HTMLElement): Cleanup {
     place.hidden = false;
     activeView(id);
     requestDraw();
-    moveTo(next.pose);
+    if (mode === 'pedestrian') { walkHelp.textContent = 'Lieu sélectionné. Utiliser « Rejoindre le lieu » pour valider un nouveau départ.'; } else moveTo(next.pose);
   };
   const setView = (view: string): void => {
+    if (view === 'aerial' && mode === 'pedestrian') setMode('aerial');
     if (view !== 'aerial') { selectPoi(view); return; }
     clearPoi();
     activeView('aerial');
     moveTo(manifest ? cityOverviewPose(manifest.bounds, aspect()) : aerialPose(aspect()));
   };
-  const orientNorth = (): void => moveTo(northPose(readPose()));
+  const orientNorth = (): void => { if (mode === 'pedestrian' && walker && !pendingSpawn) { entry = undefined; walker.yaw = 0; applyWalkingCamera(); updateAnimation(); } else if (mode === 'aerial') moveTo(northPose(readPose())); };
   const manualInteraction = (): void => {
     navigator.cancel();
     destination = undefined;
@@ -290,6 +375,9 @@ export function mount(container: HTMLElement): Cleanup {
   const click = (event: MouseEvent): void => {
     const button = (event.target as HTMLElement).closest<HTMLButtonElement>('button');
     if (button?.disabled) return;
+    if (button?.dataset.action === 'inspect' && mode === 'pedestrian' && !entry && !pendingSpawn) { pedestrianInput?.release(); raycaster.setFromCamera(new Vector2(0, 0), camera); selectionIndex.pick(raycaster.ray); }
+    if (button?.dataset.mode) setMode(button.dataset.mode as 'aerial' | 'pedestrian');
+    if (button?.dataset.action === 'walk-poi' && selection) travelTo(selection.pose.target);
     if (button?.dataset.view) setView(button.dataset.view);
     if (button?.dataset.action === 'reset') setView('aerial');
     if (button?.dataset.action === 'north') orientNorth();
@@ -302,7 +390,7 @@ export function mount(container: HTMLElement): Cleanup {
     else { clearPoi(); activeView(''); }
   };
   const keydown = (event: KeyboardEvent): void => {
-    if (event.target !== viewport) return;
+    if (event.target !== viewport || mode === 'pedestrian') return;
     const direction: Record<string, Vector3> = { ArrowLeft: new Vector3(-15, 0, 0), ArrowRight: new Vector3(15, 0, 0), ArrowUp: new Vector3(0, 0, -15), ArrowDown: new Vector3(0, 0, 15) };
     if (direction[event.key]) {
       manualInteraction();
@@ -319,7 +407,7 @@ export function mount(container: HTMLElement): Cleanup {
   const raycaster = new Raycaster();
   let press: { x: number; y: number; time: number; id: number } | undefined;
   const pointerDown = (event: PointerEvent): void => {
-    if (event.button !== 0 || event.target !== renderer.domElement || !event.isPrimary) { press = undefined; return; }
+    if (mode === 'pedestrian' || event.button !== 0 || event.target !== renderer.domElement || !event.isPrimary) { press = undefined; return; }
     press = { x: event.clientX, y: event.clientY, time: performance.now(), id: event.pointerId };
   };
   const pointerUp = (event: PointerEvent): void => {
@@ -345,7 +433,7 @@ export function mount(container: HTMLElement): Cleanup {
   let inViewport = true;
   const visibilityChanged = (): void => {
     const hidden = document.hidden || !inViewport;
-    if (hidden) { navigator.cancel(); timeControls.pause(); }
+    if (hidden) { navigator.cancel(); timeControls.pause(); pedestrianInput?.release(); entry = undefined; if (mode === 'pedestrian' && !pendingSpawn) applyWalkingCamera(); }
     scheduler.setHidden(hidden); updateAnimation();
   };
   const motionChanged = (): void => {
@@ -384,6 +472,13 @@ export function mount(container: HTMLElement): Cleanup {
       if (disposed) return;
       overview = createOverview(general, data, atmosphere, terrainOverview);
       scene.add(overview.group);
+      world = new WalkingWorld(terrainOverview.bridgeLevels, data.boundary); walker = new Walker(world);
+      pedestrianInput = new PedestrianInput(viewport, renderer.domElement, walker, () => mode === 'pedestrian' && !pendingSpawn && !entry && !disposed, () => {
+        if (!disposed && mode === 'pedestrian' && !pendingSpawn && !entry) { applyWalkingCamera(); scheduleTiles(); }
+        updateAnimation();
+      }, (text) => { walkHelp.textContent = text; });
+      minimap = new Minimap(viewport, data, general, terrainOverview.waterSurfaces ?? general.surfaces.filter((s) => s.kind === 'water'), travelTo);
+      container.querySelector<HTMLButtonElement>('[data-mode="pedestrian"]')!.disabled = false;
       terrainStore = new TerrainStore((url, signal) => fetchData(base + url, signal));
       loader = new TileLoader({
         fetch: async (choice, signal) => {
@@ -411,14 +506,14 @@ export function mount(container: HTMLElement): Cleanup {
           });
           return { ...model, bytes, data: tileData, lod: choice.lod };
         },
-        attach: (resource, tile) => { scene.add(resource.group); selectionIndex.setTile(tile.id, resource.data, resource.lod, resource.surfaceElevation); if (resource.lod !== 'far') traffic.setTile(tile.id, resource.data, resource.surfaceElevation, terrainOverview!.bridgeLevels); overview?.setTile(tile, true); lighting.invalidateShadows(); sceneDirty = true; },
-        detach: (resource, tile) => { scene.remove(resource.group); selectionIndex.removeTile(tile.id); traffic.removeTile(tile.id); overview?.setTile(tile, false); lighting.invalidateShadows(); sceneDirty = true; },
+        attach: (resource, tile) => { scene.add(resource.group); if (resource.lod === 'near') world?.setTile(tile.id, resource.data, resource.surfaceElevation); selectionIndex.setTile(tile.id, resource.data, resource.lod, resource.surfaceElevation); if (resource.lod !== 'far') traffic.setTile(tile.id, resource.data, resource.surfaceElevation, terrainOverview!.bridgeLevels); overview?.setTile(tile, true); lighting.invalidateShadows(); sceneDirty = true; },
+        detach: (resource, tile) => { scene.remove(resource.group); world?.removeTile(tile.id); selectionIndex.removeTile(tile.id); traffic.removeTile(tile.id); overview?.setTile(tile, false); lighting.invalidateShadows(); sceneDirty = true; },
         changed: () => {
           if (disposed || !loader) return;
           const info = loader.info;
           status.hidden = info.pending === 0 && tileFailures === 0;
           status.textContent = tileFailures ? `${tileFailures} tuile(s) indisponible(s) ; la vue générale reste visible.` : destination ? 'Affinage du quartier sélectionné…' : 'Chargement des quartiers visibles…';
-          selectionIndex.reconcile(); traffic.select(camera, controls.target, trafficControl.value as TrafficDensity, motion.matches); updateAnimation();
+          resolveSpawn(); selectionIndex.reconcile(); traffic.select(camera, controls.target, trafficControl.value as TrafficDensity, motion.matches); updateAnimation();
           refreshDiagnostics();
           if (sceneDirty) requestDraw();
         },
@@ -441,6 +536,7 @@ export function mount(container: HTMLElement): Cleanup {
   return () => {
     disposed = true;
     request.abort();
+    pedestrianInput?.dispose(); minimap?.dispose(); world?.dispose();
     navigator.dispose(); scheduler.dispose(); timeControls.dispose();
     observer.disconnect(); intersection.disconnect();
     document.removeEventListener('visibilitychange', visibilityChanged);

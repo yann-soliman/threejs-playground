@@ -23,7 +23,7 @@ KEEP = ['name', 'building', 'height', 'min_height', 'building:levels', 'roof:sha
         'roof:height', 'building:colour', 'building:material', 'roof:colour',
         'barrier', 'highway', 'width', 'lanes', 'surface', 'landuse', 'leisure',
         'natural', 'water', 'waterway', 'historic', 'bridge', 'tunnel', 'layer',
-        'oneway', 'access', 'motor_vehicle', 'vehicle', 'junction', 'maxspeed']
+        'foot', 'oneway', 'access', 'motor_vehicle', 'vehicle', 'junction', 'maxspeed']
 
 
 def project(lon, lat, z=None):

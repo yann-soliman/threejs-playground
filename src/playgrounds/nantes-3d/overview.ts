@@ -4,15 +4,16 @@ import { meshElevation, sampleElevation, terrainMesh } from './terrain';
 import type { TerrainOverview } from './terrain';
 import type { AtmosphereUniforms } from './atmosphere';
 import { createCity } from './city';
+import type { CityModel } from './city';
 import type { CityData } from './types';
 import type { CityManifest, TileEntry } from './tiles';
 
 /** Masque commun des tuiles remplacées : la vue générale ne double pas leurs objets. */
-export function createOverview(data: CityData, manifest: CityManifest, atmosphere?: AtmosphereUniforms, terrain?: TerrainOverview): {
+export function createOverview(data: CityData, manifest: CityManifest, atmosphere?: AtmosphereUniforms, terrain?: TerrainOverview, prepared?: CityModel): {
   group: Group; setTile: (tile: TileEntry, active: boolean) => void; dispose: () => void;
 } {
-  const model = createCity(data, { lod: 'far', ground: false, atmosphere, elevation: terrain ? (x, z) => sampleElevation(terrain.grid, x, z) : undefined, waterLevels: terrain?.waterLevels, bridgeLevels: terrain?.bridgeLevels, waterSurfaces: terrain?.waterSurfaces, surfaceRings: terrain?.surfaceRings, groundElevation: terrain ? meshElevation(terrain.vertices, terrain.indices, (x, z) => sampleElevation(terrain.grid, x, z)) : undefined });
-  const relief = terrain ? terrainMesh(terrain.vertices, terrain.indices, (x, z) => sampleElevation(terrain.grid, x, z)) : undefined;
+  const model = prepared ?? createCity(data, { lod: 'far', ground: false, atmosphere, elevation: terrain ? (x, z) => sampleElevation(terrain.grid, x, z) : undefined, waterLevels: terrain?.waterLevels, bridgeLevels: terrain?.bridgeLevels, waterSurfaces: terrain?.waterSurfaces, surfaceRings: terrain?.surfaceRings, groundElevation: terrain ? meshElevation(terrain.vertices, terrain.indices, (x, z) => sampleElevation(terrain.grid, x, z)) : undefined });
+  const relief = terrain && !prepared ? terrainMesh(terrain.vertices, terrain.indices, (x, z) => sampleElevation(terrain.grid, x, z)) : undefined;
   if (relief) model.group.add(relief);
   const minX = Math.floor(manifest.bounds[0]! / manifest.tileSize);
   const minZ = Math.floor(manifest.bounds[1]! / manifest.tileSize);

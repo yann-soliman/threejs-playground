@@ -17,17 +17,26 @@ export function windowIllumination(id: string): [number, number, number] {
   const color = new Color(['#ffc878', '#ffe1a3', '#ffb967'][seed % 3]!);
   return [color.r * 1.5, color.g * 1.5, color.b * 1.5];
 }
-export function windowMaterial(geometry: BufferGeometry, lights: number[], uniforms: AtmosphereUniforms): MeshStandardMaterial {
+export function windowMaterial(geometry: BufferGeometry, lights: number[], uniforms: AtmosphereUniforms, borders?: number[]): MeshStandardMaterial {
   geometry.setAttribute('windowGlow', new InstancedBufferAttribute(new Float32Array(lights), 3));
+  if (borders) geometry.setAttribute('windowBorder', new InstancedBufferAttribute(new Float32Array(borders), 2));
+  const frame = new Color('#f0e5ce');
   const material = new MeshStandardMaterial({ color: '#ffffff', roughness: .55 });
   material.onBeforeCompile = (shader) => {
     shader.uniforms.nightAmount = uniforms.night;
     shader.vertexShader = 'attribute vec3 windowGlow; varying vec3 glow;\n' + shader.vertexShader;
     shader.vertexShader = shader.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\nglow = windowGlow;');
     shader.fragmentShader = 'uniform float nightAmount; varying vec3 glow;\n' + shader.fragmentShader;
-    shader.fragmentShader = shader.fragmentShader.replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\ntotalEmissiveRadiance += glow * nightAmount;');
+    shader.fragmentShader = shader.fragmentShader.replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\ntotalEmissiveRadiance += glow * nightAmount' + (borders ? ' * windowPane;' : ';'));
+    if (borders) {
+      shader.vertexShader = 'attribute vec2 windowBorder; varying vec2 paneBorder; varying vec2 paneUv;\n' + shader.vertexShader;
+      shader.vertexShader = shader.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\npaneBorder = windowBorder; paneUv = uv;');
+      shader.fragmentShader = 'varying vec2 paneBorder; varying vec2 paneUv;\n' + shader.fragmentShader;
+      shader.fragmentShader = shader.fragmentShader.replace('#include <color_fragment>', `#include <color_fragment>\nfloat windowPane = step(paneBorder.x, paneUv.x) * step(paneBorder.y, paneUv.y) * step(paneUv.x, 1.0 - paneBorder.x) * step(paneUv.y, 1.0 - paneBorder.y);\ndiffuseColor.rgb = mix(vec3(${frame.r.toFixed(8)}, ${frame.g.toFixed(8)}, ${frame.b.toFixed(8)}), diffuseColor.rgb, windowPane);`);
+      shader.fragmentShader = shader.fragmentShader.replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\nroughnessFactor = mix(0.86, roughnessFactor, windowPane);');
+    }
   };
-  material.customProgramCacheKey = () => 'nantes-night-windows-v1';
+  material.customProgramCacheKey = () => borders ? 'nantes-night-windows-v2' : 'nantes-night-windows-v1';
   return material;
 }
 

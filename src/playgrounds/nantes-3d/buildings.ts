@@ -81,7 +81,27 @@ export function paint(geometry: BufferGeometry, color: Color): BufferGeometry {
   return geometry;
 }
 
-export function buildingBody(feature: Feature, style: BuildingStyle): BufferGeometry {
+/** Façades seules : les plafonds et socles masqués par les toits/sols ne sont pas générés. */
+function wallGeometry(feature: Feature, bottom: number, top: number, capBottom = false): BufferGeometry {
+  const values: number[] = [];
+  for (let r = 0; r < feature.rings.length; r++) {
+    const ring = feature.rings[r]!, outward = Math.sign(signedArea(ring)) * (r === 0 ? 1 : -1);
+    for (let i = 0; i < ring.length; i++) {
+      const a = ring[i]!, b = ring[(i + 1) % ring.length]!;
+      const points = [[a[0], bottom, a[1]], [b[0], top, b[1]], [b[0], bottom, b[1]], [a[0], bottom, a[1]], [a[0], top, a[1]], [b[0], top, b[1]]];
+      if (outward < 0) for (let n = 0; n < 6; n += 3) [points[n + 1], points[n + 2]] = [points[n + 2]!, points[n + 1]!];
+      values.push(...points.flat());
+    }
+  }
+  if (capBottom) {
+    const vectors = feature.rings.map((ring) => ring.map(([x, z]) => new Vector2(x, z))), all = feature.rings.flat();
+    for (const face of ShapeUtils.triangulateShape(vectors[0]!, vectors.slice(1))) for (const n of face) values.push(all[n]![0], bottom, all[n]![1]);
+  }
+  const geometry = new BufferGeometry(); geometry.setAttribute('position', new Float32BufferAttribute(values, 3)); geometry.computeVertexNormals(); return geometry;
+}
+
+export function buildingBody(feature: Feature, style: BuildingStyle, visibleOnly = false): BufferGeometry {
+  if (visibleOnly && style.height - style.roofHeight - style.base >= .1) return paint(wallGeometry(feature, style.base + .16, style.base + .16 + Math.max(.1, style.height - style.roofHeight - style.base), style.base > 0), style.facade);
   const geometry = new ExtrudeGeometry(footprintShape(feature.rings), {
     depth: Math.max(0.1, style.height - style.roofHeight - style.base), bevelEnabled: false, steps: 1,
   });
@@ -145,7 +165,7 @@ export function buildingRoof(feature: Feature, style: BuildingStyle): BufferGeom
   };
   for (const face of faces) {
     let polygons = [face.map((index) => all[index]!)];
-    const cuts: [((p: Point) => number), number][] = [[v, (minV + maxV) / 2]];
+    const cuts: [((p: Point) => number), number][] = shape === 'flat' ? [] : [[v, (minV + maxV) / 2]];
     if (hipped) cuts.push([u, (minU + maxU) / 2]);
     if (mansard) cuts.push([v, minV + spanV * 0.2], [v, minV + spanV * 0.8]);
     for (const [value, level] of cuts) polygons = polygons.flatMap((poly) => split(poly, value, level));
@@ -176,8 +196,9 @@ export function signedArea(ring: Point[]): number {
 
 
 /** Socle vertical distinct : le bâtiment garde son niveau horizontal et sa hauteur. */
-export function buildingFoundation(feature: Feature, minimum: number, level: number, color: Color): BufferGeometry {
+export function buildingFoundation(feature: Feature, minimum: number, level: number, color: Color, visibleOnly = false): BufferGeometry {
   const bottom = minimum - .15;
+  if (visibleOnly) return paint(wallGeometry(feature, bottom, bottom + Math.max(.01, level + .16 - bottom)), color);
   const geometry = new ExtrudeGeometry(footprintShape(feature.rings), {
     depth: Math.max(.01, level + .16 - bottom), bevelEnabled: false, steps: 1,
   });

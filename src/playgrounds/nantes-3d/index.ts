@@ -4,7 +4,6 @@ import {
 } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import type { Cleanup } from '../../shared/playground';
-import { createCity } from './city';
 import type { CityModel, DetailLevel } from './city';
 import { createOverview } from './overview';
 import { selectTiles, TileLoader } from './tiles';
@@ -26,6 +25,8 @@ import { BuildingSelection, buildingInformation, isSelectionClick } from './sele
 import { WalkingWorld, Walker, walkingTiles, EYE_HEIGHT } from './walking';
 import { PedestrianInput } from './pedestrian-input';
 import { Minimap } from './minimap';
+import { GeometryBuilder } from './geometry-client';
+import { PerformanceLog } from './performance';
 import './style.css';
 
 type InteractiveTile = CityModel & TileResource & { data: CityData; lod: DetailLevel };
@@ -86,6 +87,7 @@ export function mount(container: HTMLElement): Cleanup {
   renderer.toneMappingExposure = 1.15;
   renderer.domElement.setAttribute('aria-hidden', 'true');
   viewport.prepend(renderer.domElement);
+  const profile = new PerformanceLog();
   const scene = new Scene();
   scene.background = new Color('#e7ece5');
   scene.fog = new Fog('#e7ece5', 20000, 65000);
@@ -142,6 +144,7 @@ export function mount(container: HTMLElement): Cleanup {
   let terrainStore: TerrainStore | undefined;
   const terrainFiles = new Map<string, string>();
   let loader: TileLoader<InteractiveTile> | undefined;
+  let geometryBuilder: GeometryBuilder | undefined;
   let world: WalkingWorld | undefined;
   let walker: Walker | undefined;
   let pedestrianInput: PedestrianInput | undefined;
@@ -206,7 +209,7 @@ export function mount(container: HTMLElement): Cleanup {
     else if (scene.fog instanceof Fog) { scene.fog.near = Math.max(1600, distance * 1.15); scene.fog.far = Math.max(4000, distance * 2.2); }
     lighting.prepare(controls.target, distance, performance.now());
     minimap?.update({ position: mode === 'pedestrian' && walker ? walker.position : controls.target, yaw: heading, pedestrian: mode === 'pedestrian', distance }, performance.now(), true);
-    renderer.render(scene, camera);
+    profile.measure('render', mode, () => renderer.render(scene, camera));
     if (diagnostics.open) {
       const now = performance.now();
       if ((walker?.moving || entry || navigator.active || timeControls.playing || waterActive() || traffic.count > 0) && lastDraw && now > lastDraw) movementFps = 1000 / (now - lastDraw);
@@ -451,11 +454,16 @@ export function mount(container: HTMLElement): Cleanup {
   observer.observe(viewport);
   // Premier cadrage immédiat au montage ; toutes les actions suivantes sont animées.
   applyPose(aerialPose(aspect())); resize();
+  profile.publish(() => ({ mode, position: walker?.position.toArray(), yaw: walker?.yaw, tiles: loader?.info, calls: renderer.info.render.calls, triangles: renderer.info.render.triangles, geometries: renderer.info.memory.geometries, textures: renderer.info.memory.textures, programs: renderer.info.programs?.length, camera: camera.position.toArray(), target: controls.target.toArray() }));
   const request = new AbortController();
   const fetchData = async <T,>(url: string, signal: AbortSignal): Promise<T> => {
+    const start = profile.enabled ? performance.now() : 0;
     const response = await fetch(url, { signal });
+    profile.record('headers', url, start);
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    return await response.json() as T;
+    if (!profile.enabled) return await response.json() as T;
+    const read = performance.now(), text = await response.text(); profile.record('body', url, read);
+    return profile.measure('parse', url, () => JSON.parse(text) as T);
   };
   void fetchData<CityManifest>(`${base}manifest.json`, request.signal)
     .then(async (data) => {
@@ -470,7 +478,10 @@ export function mount(container: HTMLElement): Cleanup {
       if (data.tiles.some((tile) => !terrainFiles.has(tile.id))) throw new Error('Une tuile IGN nécessaire est absente');
       terrainOverview = await fetchData<TerrainOverview>(base + 'terrain/' + reliefManifest.overview, request.signal);
       if (disposed) return;
-      overview = createOverview(general, data, atmosphere, terrainOverview);
+      geometryBuilder = new GeometryBuilder(terrainOverview, atmosphere, profile);
+      const prepared = await geometryBuilder.prepare(general, 'far', request.signal, true);
+      if (disposed) { prepared.dispose(); return; }
+      overview = profile.measure('overview', 'municipality', () => createOverview(general, data, atmosphere, terrainOverview, prepared));
       scene.add(overview.group);
       world = new WalkingWorld(terrainOverview.bridgeLevels, data.boundary); walker = new Walker(world);
       pedestrianInput = new PedestrianInput(viewport, renderer.domElement, walker, () => mode === 'pedestrian' && !pendingSpawn && !entry && !disposed, () => {
@@ -492,7 +503,8 @@ export function mount(container: HTMLElement): Cleanup {
           // Laisser le navigateur traiter les interactions entre deux lots de géométrie.
           await new Promise<void>((resolve) => window.setTimeout(resolve, 0));
           if (signal.aborted || disposed) throw new DOMException('Chargement annulé', 'AbortError');
-          const model = createCity(tileData, { lod: choice.lod, ground: false, atmosphere, terrain: tileData.terrain, elevation: (x, z) => sampleElevation(terrainOverview!.grid, x, z), waterLevels: terrainOverview!.waterLevels, bridgeLevels: terrainOverview!.bridgeLevels });
+          const model = await geometryBuilder!.prepare(tileData, choice.lod, signal);
+          if (signal.aborted || disposed) { model.dispose(); throw new DOMException('Géométrie annulée', 'AbortError'); }
           let bytes = 0;
           const geometries = new Set<BufferGeometry>();
           model.group.traverse((object) => {
@@ -535,7 +547,7 @@ export function mount(container: HTMLElement): Cleanup {
 
   return () => {
     disposed = true;
-    request.abort();
+    request.abort(); geometryBuilder?.dispose(); profile.dispose();
     pedestrianInput?.dispose(); minimap?.dispose(); world?.dispose();
     navigator.dispose(); scheduler.dispose(); timeControls.dispose();
     observer.disconnect(); intersection.disconnect();

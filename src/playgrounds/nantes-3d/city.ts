@@ -161,8 +161,8 @@ export function createCity(data: CityData, options: { lod?: DetailLevel; ground?
     const measured = options.terrain?.bases[feature.id];
     const levels = measured ?? [Math.min(...feature.rings[0]!.map(([x, z]) => sample(x, z))), Math.max(...feature.rings[0]!.map(([x, z]) => sample(x, z)))];
     const base = levels[1]!;
-    if ((options.terrain || options.elevation) && style.base === 0) foundations.push(buildingFoundation(feature, levels[0]!, base, style.facade.clone().multiplyScalar(.82)));
-    bodies.push(buildingBody(feature, style).translate(0, base, 0));
+    if ((options.terrain || options.elevation) && style.base === 0) foundations.push(buildingFoundation(feature, levels[0]!, base, style.facade.clone().multiplyScalar(.82), true));
+    bodies.push(buildingBody(feature, style, true).translate(0, base, 0));
     roofs.push(buildingRoof(feature, style).translate(0, base, 0));
     if (lod !== 'near') continue;
     const eaves = style.height - style.roofHeight;
@@ -215,23 +215,18 @@ export function createCity(data: CityData, options: { lod?: DetailLevel; ground?
     if (count > 0) group.add(mesh);
     return mesh;
   }
-  const frames = instances(new PlaneGeometry(1, 1), material('#f0e5ce'), windowTransforms.length);
   const windowGeometry = new PlaneGeometry(1, 1);
-  const glass = windowMaterial(windowGeometry, windowTransforms.flatMap((w) => w.light), atmosphere);
+  const glass = windowMaterial(windowGeometry, windowTransforms.flatMap((w) => w.light), atmosphere, windowTransforms.flatMap((w) => [.11 / (w.w + .22), .11 / (w.h + .22)]));
   materials.add(glass);
   const windows = instances(windowGeometry, glass, windowTransforms.length);
   windowTransforms.forEach((w, i) => {
     dummy.position.set(w.x, w.y, w.z);
     dummy.rotation.set(0, w.angle, 0);
     dummy.scale.set(w.w + 0.22, w.h + 0.22, 1);
-    dummy.updateMatrix(); frames.setMatrixAt(i, dummy.matrix);
-    dummy.position.x += Math.sin(w.angle) * 0.025;
-    dummy.position.z += Math.cos(w.angle) * 0.025;
-    dummy.scale.set(w.w, w.h, 1);
     dummy.updateMatrix(); windows.setMatrixAt(i, dummy.matrix);
     windows.setColorAt(i, new Color('#52666c'));
   });
-  frames.computeBoundingSphere(); windows.computeBoundingSphere();
+  windows.computeBoundingSphere();
 
   const trunks = instances(new CylinderGeometry(0.22, 0.32, 3, 5), material('#8b7d63'), data.trees.length);
   const foliage = instances(new IcosahedronGeometry(1, lod === 'near' ? 1 : 0), material('#ffffff'), data.trees.length);
@@ -252,7 +247,7 @@ export function createCity(data: CityData, options: { lod?: DetailLevel; ground?
   return { surfaceElevation: sample, group, windows: windowTransforms.length, estimatedHeights, dispose: () => {
     if (disposed) return;
     disposed = true;
-    group.traverse((object) => { if (object instanceof InstancedMesh) object.dispose(); });
+    group.traverse((object) => { if (object instanceof Mesh) { geometries.add(object.geometry); materials.add(object.material as MeshStandardMaterial); } if (object instanceof InstancedMesh) object.dispose(); });
     geometries.forEach((g) => g.dispose());
     materials.forEach((m) => m.dispose());
     group.clear();

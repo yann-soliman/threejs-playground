@@ -707,8 +707,38 @@ Limites géographiques actuelles : précision variable du MNT ; ponts approximat
 tunnels omis et niveaux superposés incomplets ;
 hauteurs largement estimées ; monuments interprétés ; formes de toit approchées ;
 jonctions de chaussées estimées ; limites de tuiles parfois perceptibles au changement
-de LOD ; vue générale agrégée ; génération d’une tuile dense sur le thread principal.
+de LOD ; vue générale agrégée ; génération d’une tuile dense sur le thread principal en V3 (déplacée dans un worker en V5C).
 Une erreur réseau conserve la vue générale et propose de recharger la page.
 Les données publiques ne sont pas hashées par Vite : un rafraîchissement de page
 peut être nécessaire après une nouvelle publication. Pas de mesures sur GPU physique,
 Safari ni téléphone réel ; le Chromium logiciel ne représente pas ces performances.
+
+
+## V5C — profilage et optimisation (13 octobre 2026)
+
+Le rapport [PERFORMANCE.md](./PERFORMANCE.md) décrit le protocole reproductible,
+les résultats avant/après, les compromis visuels et les limites des mesures.
+La préparation de la vue générale et des tuiles passe par un unique worker Vite,
+sans dépendance supplémentaire et sans transfert de ressources WebGL.
+Les données géographiques, les trois LOD et les budgets de cache restent identiques.
+
+Le profilage est facultatif : ouvrir `?profil=1#/playgrounds/nantes-3d`, puis appeler
+`window.nantesProfile.snapshot()` dans la console. Le journal est limité à
+1 024 événements et supprimé à la fermeture. Il sépare HTTP, lecture/décodage,
+JSON, préparation worker, restauration des buffers et soumission du rendu.
+Sans ce paramètre, les mesures et l’API globale sont désactivées.
+
+Pour reproduire les cinq scénarios sur le build de production :
+
+```sh
+npm run build
+npm run preview -- --host 127.0.0.1 --port 4175
+# Dans un autre terminal ; Playwright est un outil de développement facultatif.
+python3 -m pip install playwright
+python3 src/playgrounds/nantes-3d/scripts/benchmark_performance.py --label mesure
+```
+
+Le script utilise `/usr/bin/chromium` s’il existe, sinon le Chromium installé par
+`python3 -m playwright install chromium`. Les options `--chromium` et `--url`
+permettent de choisir le navigateur et le préfixe de déploiement. Les captures
+et mesures JSON restent dans `work/v5c/`, ignoré par Git.

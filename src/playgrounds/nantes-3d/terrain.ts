@@ -70,29 +70,35 @@ export function terrainGeometry(vertices: number[], indices: number[], sample?: 
 }
 /** Altitude sur les triangles effectivement affichés, pour éviter routes et parcs enterrés. */
 export function meshElevation(vertices: number[], indices: number[], fallback: (x: number, z: number) => number): (x: number, z: number) => number {
-  const bins = new Map<string, number[]>();
+  const spans: number[] = [];
+  for (let i = 0; i < indices.length; i += Math.max(3, Math.floor(indices.length / 72) * 3)) {
+    const a = indices[i]! * 3, b = indices[i + 1]! * 3, c = indices[i + 2]! * 3;
+    spans.push(Math.max(Math.abs(vertices[a]! - vertices[b]!), Math.abs(vertices[a]! - vertices[c]!), Math.abs(vertices[a + 2]! - vertices[b + 2]!), Math.abs(vertices[a + 2]! - vertices[c + 2]!)));
+  }
+  spans.sort((a, b) => a - b);
+  const size = Math.max(20, Math.min(100, spans[Math.floor(spans.length / 2)] ?? 100));
+  const bins = new Map<string, number[]>(), coefficients = new Float64Array(indices.length * 3);
   for (let i = 0; i < indices.length; i += 3) {
-    const ids = indices.slice(i, i + 3).map((n) => n * 3);
-    const xs = ids.map((n) => vertices[n]!), zs = ids.map((n) => vertices[n + 2]!);
-    for (let x = Math.floor(Math.min(...xs) / 100); x <= Math.floor(Math.max(...xs) / 100); x++) {
-      for (let z = Math.floor(Math.min(...zs) / 100); z <= Math.floor(Math.max(...zs) / 100); z++) {
-        const key = `${x}_${z}`, entries = bins.get(key) ?? []; entries.push(i); bins.set(key, entries);
-      }
+    const a = indices[i]! * 3, b = indices[i + 1]! * 3, c = indices[i + 2]! * 3;
+    const ax = vertices[a]!, az = vertices[a + 2]!, bx = vertices[b]!, bz = vertices[b + 2]!, cx = vertices[c]!, cz = vertices[c + 2]!;
+    const det = (bz - cz) * (ax - cx) + (cx - bx) * (az - cz); if (Math.abs(det) < 1e-8) continue;
+    const offset = i * 3;
+    coefficients.set([(bz - cz) / det, (cx - bx) / det, (-(bz - cz) * cx - (cx - bx) * cz) / det,
+      (cz - az) / det, (ax - cx) / det, (-(cz - az) * cx - (ax - cx) * cz) / det, vertices[a + 1]!, vertices[b + 1]!, vertices[c + 1]!], offset);
+    for (let x = Math.floor(Math.min(ax, bx, cx) / size); x <= Math.floor(Math.max(ax, bx, cx) / size); x++) for (let z = Math.floor(Math.min(az, bz, cz) / size); z <= Math.floor(Math.max(az, bz, cz) / size); z++) {
+      const key = `${x}_${z}`, entries = bins.get(key) ?? []; entries.push(offset); bins.set(key, entries);
     }
   }
   return (x, z) => {
-    for (const i of bins.get(`${Math.floor(x / 100)}_${Math.floor(z / 100)}`) ?? []) {
-      const a = indices[i]! * 3, b = indices[i + 1]! * 3, c = indices[i + 2]! * 3;
-      const ax = vertices[a]!, az = vertices[a + 2]!, bx = vertices[b]!, bz = vertices[b + 2]!, cx = vertices[c]!, cz = vertices[c + 2]!;
-      const determinant = (bz - cz) * (ax - cx) + (cx - bx) * (az - cz);
-      if (Math.abs(determinant) < 1e-8) continue;
-      const u = ((bz - cz) * (x - cx) + (cx - bx) * (z - cz)) / determinant;
-      const v = ((cz - az) * (x - cx) + (ax - cx) * (z - cz)) / determinant;
-      if (u >= -1e-7 && v >= -1e-7 && u + v <= 1 + 1e-7) return u * vertices[a + 1]! + v * vertices[b + 1]! + (1 - u - v) * vertices[c + 1]!;
+    for (const i of bins.get(`${Math.floor(x / size)}_${Math.floor(z / size)}`) ?? []) {
+      const u = coefficients[i]! * x + coefficients[i + 1]! * z + coefficients[i + 2]!;
+      const v = coefficients[i + 3]! * x + coefficients[i + 4]! * z + coefficients[i + 5]!;
+      if (u >= -1e-7 && v >= -1e-7 && u + v <= 1 + 1e-7) return u * coefficients[i + 6]! + v * coefficients[i + 7]! + (1 - u - v) * coefficients[i + 8]!;
     }
     return fallback(x, z);
   };
 }
+
 export function terrainMesh(vertices: number[], indices: number[], sample?: (x: number, z: number) => number): Mesh {
   const mesh = new Mesh(terrainGeometry(vertices, indices, sample), new MeshStandardMaterial({ color: '#d4d2c4', roughness: 1 }));
   mesh.receiveShadow = true;

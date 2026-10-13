@@ -4,6 +4,7 @@ export class PedestrianInput {
   private pointer: { id: number; x: number; y: number; type: string; moved: boolean } | undefined;
   private readonly touch = new Map<number, string>();
   private disposed = false;
+  private readonly shifts = new Set<string>();
   private readonly abort = new AbortController();
   constructor(private readonly viewport: HTMLElement, private readonly canvas: HTMLCanvasElement, private readonly walker: Walker, private readonly enabled: () => boolean, private readonly changed: () => void, private readonly message: (text: string) => void) {
     const options = { signal: this.abort.signal };
@@ -13,7 +14,7 @@ export class PedestrianInput {
     viewport.addEventListener('focusout', this.focusout, options);
     for (const button of viewport.querySelectorAll<HTMLButtonElement>('[data-walk]')) {
       button.addEventListener('pointerdown', (event) => { if (!this.enabled()) return; event.preventDefault(); button.setPointerCapture(event.pointerId); const key = button.dataset.walk!; this.touch.set(event.pointerId, key); this.walker.setKey(key, true); this.changed(); }, options);
-      const release = (event: PointerEvent): void => { const key = this.touch.get(event.pointerId); this.touch.delete(event.pointerId); if (key && ![...this.touch.values()].includes(key)) this.walker.setKey(key, false); this.changed(); };
+      const release = (event: PointerEvent): void => { const key = this.touch.get(event.pointerId); this.touch.delete(event.pointerId); if (key && ![...this.touch.values()].includes(key) && !(key === 'fast' && this.shifts.size)) this.walker.setKey(key, false); this.changed(); };
       button.addEventListener('pointerup', release, options); button.addEventListener('pointercancel', release, options); button.addEventListener('lostpointercapture', release, options);
     }
   }
@@ -21,9 +22,9 @@ export class PedestrianInput {
     if (event.key === 'Escape' && document.pointerLockElement === this.canvas) { this.release(); return; }
     if (!this.enabled() || editableTarget(event.target) || (document.activeElement !== this.viewport && document.pointerLockElement !== this.canvas)) return;
     const key = movementKey(event); if (!key) return;
-    event.preventDefault(); if (this.walker.keys.has(key)) return; this.walker.setKey(key, true); this.changed();
+    event.preventDefault(); if (key === 'fast') this.shifts.add(event.code); if (this.walker.keys.has(key)) return; this.walker.setKey(key, true); this.changed();
   };
-  private keyup = (event: KeyboardEvent): void => { const key = movementKey(event); if (key && this.walker.keys.has(key)) { this.walker.setKey(key, false); this.changed(); } };
+  private keyup = (event: KeyboardEvent): void => { const key = movementKey(event); if (key === 'fast') { this.shifts.delete(event.code); if (this.shifts.size || [...this.touch.values()].includes('fast')) return; } if (key && this.walker.keys.has(key)) { this.walker.setKey(key, false); this.changed(); } };
   private focusout = (): void => { if (document.pointerLockElement !== this.canvas) this.stop(); };
   private lockChanged = (): void => { if (document.pointerLockElement === this.canvas && !this.enabled()) { this.release(); return; } if (document.pointerLockElement !== this.canvas) this.stop(); this.message(document.pointerLockElement === this.canvas ? 'Échap libère la souris · ZQSD / WASD pour marcher.' : 'Cliquer dans la scène pour regarder autour de soi ; glisser si la capture est indisponible.'); };
   private lockError = (): void => { if (!this.disposed) this.message('Capture indisponible : glisser dans la scène pour regarder autour de soi.'); };
@@ -46,7 +47,7 @@ export class PedestrianInput {
     void event;
   };
   private cancel = (): void => { this.pointer = undefined; };
-  stop = (): void => { this.walker.stop(); this.touch.clear(); this.pointer = undefined; this.changed(); };
+  stop = (): void => { this.walker.stop(); this.shifts.clear(); this.touch.clear(); this.pointer = undefined; this.changed(); };
   release(): void { this.stop(); if (document.pointerLockElement === this.canvas) document.exitPointerLock(); }
   dispose(): void { this.disposed = true; this.abort.abort(); this.release(); }
 }

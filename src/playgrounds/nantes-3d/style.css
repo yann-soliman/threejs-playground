@@ -131,3 +131,5 @@
 .nantes-activity label { display: flex; align-items: center; gap: .55rem; font-size: .85rem; }
 .nantes-activity select { font: inherit; padding: .4rem .6rem; border: 1px solid #cbd6ca; border-radius: .4rem; background: #fff; color: #35483d; }
 .nantes-activity small { flex-basis: 100%; color: #63746a; font-size: .75rem; }
+
+.nantes-walk-pad [data-walk="fast"] { grid-column: 1 / -1; width: auto; font-size: .8rem; }

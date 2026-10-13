@@ -69,3 +69,17 @@ normal = normalize(normal + mat3(viewMatrix) * rippleNormal);`);
   material.customProgramCacheKey = () => 'nantes-water-v2';
   return material;
 }
+
+/** Halo de sol stylisé, limité aux lampes chargées ; pas de lumière ni ombre supplémentaire. */
+export function streetLightMaterial(uniforms: AtmosphereUniforms): MeshStandardMaterial {
+  const material = new MeshStandardMaterial({ color: '#f9d396', emissive: '#f9d396', emissiveIntensity: .6, transparent: true, depthWrite: false, roughness: 1 });
+  material.onBeforeCompile = (shader) => {
+    shader.uniforms.streetNight = uniforms.night;
+    shader.vertexShader = 'varying vec2 streetUv;\n' + shader.vertexShader;
+    shader.vertexShader = shader.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\nstreetUv = uv;');
+    shader.fragmentShader = 'uniform float streetNight; varying vec2 streetUv;\n' + shader.fragmentShader;
+    shader.fragmentShader = shader.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\ndiffuseColor.a *= streetNight * .28 * pow(max(0.0, 1.0 - length(streetUv - .5) * 2.0), 2.0);');
+  };
+  material.customProgramCacheKey = () => 'nantes-streetlights-v1';
+  return material;
+}

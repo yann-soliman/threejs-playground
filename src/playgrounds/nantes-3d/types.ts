@@ -8,6 +8,7 @@ export interface Feature {
   visual?: { height: number; roofShape: string }; // Agrégats graphiques, séparés des tags OSM.
 }
 export interface CityData {
+  streets?: import('./street-details').StreetData; // Complément OSM V7, seulement au LOD proche.
   terrain?: TerrainTile; // Association runtime ; les fichiers OSM ne sont pas modifiés.
   meta: {
     bbox: number[];

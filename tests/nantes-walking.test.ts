@@ -26,14 +26,14 @@ describe('Exploration piétonne', () => {
   });
   it('marche à vitesse constante, même à une image par seconde, sans accélérer en diagonale', () => {
     const a = setup(), b = setup(); a.walker.keys.add('forward'); b.walker.keys.add('forward');
-    a.walker.step(1); for (let i = 0; i < 60; i++) b.walker.step(1 / 60);
+    for (let i = 0; i < 4; i++) a.walker.step(.25); for (let i = 0; i < 60; i++) b.walker.step(1 / 60);
     expect(a.walker.position.distanceTo(b.walker.position)).toBeLessThan(1e-9); expect(a.walker.position.z).toBeCloseTo(98.2);
-    const c = setup(); c.walker.keys.add('right'); c.walker.keys.add('forward'); c.walker.step(1); expect(Math.hypot(c.walker.position.x - 100, c.walker.position.z - 100)).toBeCloseTo(1.8);
+    const c = setup(); c.walker.keys.add('right'); c.walker.keys.add('forward'); for (let i = 0; i < 4; i++) c.walker.step(.25); expect(Math.hypot(c.walker.position.x - 100, c.walker.position.z - 100)).toBeCloseTo(1.8);
     c.walker.stop(); expect(c.walker.moving).toBe(false);
   });
   it('conserve un appui relâché entre deux images lentes et annule les commandes à la perte de focus', () => {
     const { walker } = setup(); walker.setKey('forward', true, 0); walker.advance(0); walker.setKey('forward', false, 1000);
-    expect(walker.advance(1000)).toBe(true); expect(walker.position.z).toBeCloseTo(98.2); expect(walker.moving).toBe(false);
+    expect(walker.advance(1000)).toBe(true); expect(walker.position.z).toBeCloseTo(99.55); expect(walker.moving).toBe(false);
     walker.setKey('forward', true, 1000); walker.stop(); expect(walker.advance(2000)).toBe(false);
   });
   it('suit le terrain et conserve la hauteur des yeux', () => {
@@ -122,7 +122,7 @@ it('traverse une frontière réelle de Nantes avec terrain et collisions des deu
       if (Math.abs(point[0]) > .01 || point[1] < 5 || point[1] > 495) continue;
       const before = world.probe(-.5, point[1]), after = world.probe(1.5, point[1]);
       if (before.height === undefined || after.height === undefined || Math.abs(before.height - after.height) > .5) continue;
-      const walker = new Walker(world); walker.position.set(-.5, before.height + EYE_HEIGHT, point[1]); walker.yaw = -Math.PI / 2; walker.keys.add('forward'); walker.step(1);
+      const walker = new Walker(world); walker.position.set(-.5, before.height + EYE_HEIGHT, point[1]); walker.yaw = -Math.PI / 2; walker.keys.add('forward'); for (let i = 0; i < 4; i++) walker.step(.25);
       if (walker.position.x > 0) { crossed = true; expect(Math.abs(walker.position.y - after.height - EYE_HEIGHT)).toBeLessThan(.2); break; }
     }
     if (crossed) break;

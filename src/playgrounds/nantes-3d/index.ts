@@ -48,7 +48,7 @@ export function mount(container: HTMLElement): Cleanup {
       <div class="nantes-modes" aria-label="Mode de caméra"><button type="button" data-mode="aerial" aria-pressed="true">Vue aérienne</button><button type="button" data-mode="pedestrian" aria-pressed="false" disabled>Mode piéton</button><button type="button" data-action="inspect" hidden>Inspecter devant soi</button></div>
       ${timePanel}
       <div class="viewport nantes-viewport" tabindex="0" role="region" aria-label="Maquette 3D interactive de Nantes" aria-describedby="nantes-help">
-        <div class="nantes-walk-pad" hidden aria-label="Déplacements piétons"><button type="button" data-walk="forward" aria-label="Avancer">↑</button><button type="button" data-walk="left" aria-label="Pas à gauche">←</button><button type="button" data-walk="back" aria-label="Reculer">↓</button><button type="button" data-walk="right" aria-label="Pas à droite">→</button></div>
+        <div class="nantes-walk-pad" hidden aria-label="Déplacements piétons"><button type="button" data-walk="forward" aria-label="Avancer">↑</button><button type="button" data-walk="left" aria-label="Pas à gauche">←</button><button type="button" data-walk="back" aria-label="Reculer">↓</button><button type="button" data-walk="right" aria-label="Pas à droite">→</button><button type="button" data-walk="fast" aria-label="Courir">Courir</button></div>
         <p class="nantes-loading" role="status">Préparation de la maquette…</p>
         <button type="button" class="nantes-compass" data-action="north" aria-label="Orienter la vue vers le nord" title="Orienter vers le nord sans changer le centre, le zoom ni l’inclinaison (N)">
           <span class="nantes-compass-rose" aria-hidden="true">
@@ -62,7 +62,8 @@ export function mount(container: HTMLElement): Cleanup {
         </div>
         <a class="nantes-attribution" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">© OpenStreetMap contributors · ODbL</a>
       </div>
-      <p class="nantes-walk-help" id="nantes-walk-help" hidden role="status">ZQSD / WASD · Maj pour accélérer · Cliquer dans la scène pour regarder autour de soi · Échap libère la souris · Sur écran tactile : glisser pour regarder, flèches pour marcher.</p>
+      <p class="nantes-walk-help" id="nantes-walk-help" hidden role="status">ZQSD / WASD · Maj pour courir (6,5 m/s) · Cliquer dans la scène pour regarder autour de soi · Échap libère la souris · Sur écran tactile : glisser pour regarder, flèches pour marcher.</p>
+      <p class="nantes-terrain-source">Façades, vitrines et modèles de mobilier : interprétations procédurales ; les positions cartographiées proviennent d’OSM.</p>
       <p class="nantes-terrain-source">Relief IGN RGE ALTI · NGF-IGN69 · échelle verticale 1:1 · <a href="https://geoservices.ign.fr/rgealti" target="_blank" rel="noopener noreferrer">Source</a> · <a href="https://www.etalab.gouv.fr/licence-ouverte-open-licence/" target="_blank" rel="noopener noreferrer">Licence ouverte</a></p>
       <p class="controls-help" id="nantes-help">Glisser pour tourner · Molette pour zoomer · Clic droit ou deux doigts pour déplacer · Clavier : flèches, +, −, R pour réinitialiser et N pour le nord</p>
       <label class="nantes-traffic">Circulation <select aria-label="Circulation"><option value="off">Désactivée</option><option value="low">Faible</option><option value="normal" selected>Normale</option></select><small>Cliquer sur un bâtiment pour l’inspecter.</small></label>
@@ -272,7 +273,7 @@ export function mount(container: HTMLElement): Cleanup {
   };
   const navigator = new CameraNavigator(readPose, applyPose, scheduler);
   const aspect = (): number => viewport.clientWidth / Math.max(1, viewport.clientHeight);
-  const walkingMessage = 'ZQSD / WASD · Maj pour accélérer · Cliquer dans la scène pour regarder autour de soi · Échap libère la souris · Tactile : glisser et flèches.';
+  const walkingMessage = 'ZQSD / WASD · Maj pour courir (6,5 m/s) · Cliquer dans la scène pour regarder autour de soi · Échap libère la souris · Tactile : glisser et flèches.';
   const applyWalkingCamera = (): void => {
     if (!walker) return;
     camera.position.copy(walker.position); camera.rotation.set(walker.pitch, walker.yaw, 0, 'YXZ');
@@ -470,7 +471,7 @@ export function mount(container: HTMLElement): Cleanup {
   observer.observe(viewport);
   // Premier cadrage immédiat au montage ; toutes les actions suivantes sont animées.
   applyPose(aerialPose(aspect())); resize();
-  profile.publish(() => ({ mode, position: walker?.position.toArray(), yaw: walker?.yaw, tiles: loader?.info, calls: renderer.info.render.calls, triangles: renderer.info.render.triangles, geometries: renderer.info.memory.geometries, textures: renderer.info.memory.textures, programs: renderer.info.programs?.length, agents: urban.counts, agentPositions: urban.positions, agentCalls: urban.drawCalls, agentBytes: urban.bytes, camera: camera.position.toArray(), target: controls.target.toArray() }));
+  profile.publish(() => ({ mode, position: walker?.position.toArray(), walkingSpeed: walker?.currentSpeed, running: walker?.keys.has('fast'), yaw: walker?.yaw, tiles: loader?.info, calls: renderer.info.render.calls, triangles: renderer.info.render.triangles, geometries: renderer.info.memory.geometries, textures: renderer.info.memory.textures, programs: renderer.info.programs?.length, agents: urban.counts, agentPositions: urban.positions, agentCalls: urban.drawCalls, agentBytes: urban.bytes, camera: camera.position.toArray(), target: controls.target.toArray() }));
   const request = new AbortController();
   const fetchData = async <T,>(url: string, signal: AbortSignal): Promise<T> => {
     const start = profile.enabled ? performance.now() : 0;
@@ -509,11 +510,12 @@ export function mount(container: HTMLElement): Cleanup {
       terrainStore = new TerrainStore((url, signal) => fetchData(base + url, signal));
       loader = new TileLoader({
         fetch: async (choice, signal) => {
-          const [city, terrain] = await Promise.all([
+          const [city, terrain, streets] = await Promise.all([
             fetchData<CityData>(base + choice.tile.urls[choice.lod], signal),
             terrainStore!.load(choice.tile.id, terrainFiles.get(choice.tile.id)!, signal),
+            choice.lod === 'near' ? fetchData<import('./street-details').StreetData>(`${base}streets/tiles/${choice.tile.id}.json`, signal) : Promise.resolve(undefined),
           ]);
-          return { ...city, terrain };
+          return { ...city, terrain, streets };
         },
         generate: async (tileData, choice, signal) => {
           // Laisser le navigateur traiter les interactions entre deux lots de géométrie.

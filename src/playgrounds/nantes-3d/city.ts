@@ -3,6 +3,8 @@ import {
   Group, IcosahedronGeometry, InstancedMesh, Mesh, MeshStandardMaterial, Object3D,
   PlaneGeometry, ShapeGeometry,
 } from 'three';
+import { createStreetDetails, storefront } from './street-details';
+import { streetRoadGeometry } from './street-roads';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { buildingBody, buildingFoundation, buildingRoof, buildingStyle, footprintShape, metres, paint, seedOf, signedArea } from './buildings';
 import { atmosphereUniforms, waterMaterial, windowIllumination, windowMaterial } from './atmosphere';
@@ -124,9 +126,10 @@ export function createCity(data: CityData, options: { lod?: DetailLevel; ground?
     const deck = options.bridgeLevels?.[road.id.split('@')[0]!];
     const roadSample = deck !== undefined ? (): number => deck : sample;
     const pedestrian = ['pedestrian', 'footway', 'path', 'steps', 'cycleway'].includes(road.tags.highway ?? '');
-    const width = roadWidth(road.tags);
-    if (!pedestrian) pavementParts.push(paint(ribbon(points, width + 3, 0.08, roadSample), new Color('#c3bfb3')));
-    roadParts.push(paint(ribbon(points, width, pedestrian ? 0.11 : 0.12, roadSample), new Color(pedestrian ? '#ddd1bb' : '#999e9a')));
+    const tags = { ...road.tags, ...data.streets?.roads[road.id.split('/').slice(0, 2).join('/')] };
+    const width = roadWidth(tags);
+    if (!pedestrian && !['no', 'none'].includes(tags.sidewalk ?? '')) pavementParts.push(paint(ribbon(points, width + 3, 0.08, roadSample), new Color('#c3bfb3')));
+    roadParts.push(paint(ribbon(points, width, pedestrian ? 0.11 : 0.12, roadSample), new Color(tags.highway === 'cycleway' ? '#a4b49d' : pedestrian ? '#ddd1bb' : ['paving_stones', 'cobblestone', 'sett'].includes(tags.surface ?? '') ? '#b6b2a7' : '#929a98')));
   }
   batch(pavementParts, material('#ffffff', true), false);
   batch(roadParts, material('#ffffff', true), false);
@@ -191,7 +194,7 @@ export function createCity(data: CityData, options: { lod?: DetailLevel; ground?
         for (let column = 0; column < columns; column++) {
           const t = (column + 0.5) / columns;
           for (let floor = 0; floor < style.levels; floor++) {
-            const shop = floor === 0 && seed % 4 === 0;
+            const shop = floor === 0 && !!storefront(feature, data.streets?.businesses);
             windowTransforms.push({
               x: a[0] + dx * t + nx * 0.11,
               z: a[1] + dz * t + nz * 0.11,
@@ -228,19 +231,30 @@ export function createCity(data: CityData, options: { lod?: DetailLevel; ground?
   });
   windows.computeBoundingSphere();
 
+  const details = createStreetDetails(data, lod, sample, options.terrain?.bases ?? {}, atmosphere);
+  if (details.children.length) group.add(...details.children);
+  if (lod === 'near') {
+    const streetGeometry = streetRoadGeometry(data, sample);
+    if (streetGeometry.getAttribute('position').count) add(streetGeometry, material('#ffffff', true), false);
+    else streetGeometry.dispose();
+  }
+
   const trunks = instances(new CylinderGeometry(0.22, 0.32, 3, 5), material('#8b7d63'), data.trees.length);
   const foliage = instances(new IcosahedronGeometry(1, lod === 'near' ? 1 : 0), material('#ffffff'), data.trees.length);
   foliage.castShadow = true;
   data.trees.forEach(([x, z], i) => {
     const variation = seedOf(`${x}:${z}`);
     dummy.rotation.set(0, variation % 6, 0);
-    dummy.position.set(x, sample(x, z) + 1.5, z); dummy.scale.set(1, 1, 1);
+    const trunkHeight = .8 + variation % 5 * .12;
+    dummy.position.set(x, sample(x, z) + 1.5 * trunkHeight, z); dummy.scale.set(.7 + variation % 3 * .15, trunkHeight, .7 + variation % 3 * .15);
     dummy.updateMatrix(); trunks.setMatrixAt(i, dummy.matrix);
-    dummy.position.y = sample(x, z) + 4.2;
+
     const size = 2 + variation % 4 * 0.35;
-    dummy.scale.set(size, size * 1.15, size);
+    const canopyHeight = size * ([.8, 1.15, 1.35][variation % 3]!);
+    dummy.position.y = sample(x, z) + 3 * trunkHeight + canopyHeight * .7;
+    dummy.scale.set(size, canopyHeight, size);
     dummy.updateMatrix(); foliage.setMatrixAt(i, dummy.matrix);
-    foliage.setColorAt(i, new Color(['#7b956b', '#91a57b', '#658466', '#a2ae80'][variation % 4]!));
+    foliage.setColorAt(i, new Color(['#7b956b', '#91a57b', '#658466', '#a2ae80', '#6c8767', '#a6b584'][variation % 6]!));
   });
   trunks.computeBoundingSphere(); foliage.computeBoundingSphere();
   let disposed = false;

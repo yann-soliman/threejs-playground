@@ -1,4 +1,4 @@
-# Nantes 3D — V6
+# Nantes 3D — V7
 
 Diorama interactif de **toute la commune de Nantes**, dans l’architecture existante
 `mount(container): Cleanup`. Three.js, TypeScript strict, HTML/CSS natifs et fichiers
@@ -17,7 +17,7 @@ quartier parcouru avec un cadrage aérien de 400 m, sans retour automatique au c
 Les boutons de zoom/reset sont réservés à la vue aérienne ; la boussole oriente
 le regard vers le nord dans les deux modes.
 
-**Commandes.** ZQSD ou WASD pour marcher ; Maj pour accélérer : 1,8 ou 3,6 m/s,
+**Commandes.** ZQSD ou WASD pour marcher ; Maj pour courir : 1,8 ou 6,5 m/s, avec une transition progressive,
 avec diagonales normalisées. Cliquer dans la scène demande la capture de souris
 uniquement après ce geste ; Échap la libère. En cas de refus ou d’absence de
 Pointer Lock, glisser dans la scène permet de regarder. Les yeux sont à 1,70 m ;
@@ -53,7 +53,7 @@ Les règles conditionnelles, clôtures absentes d’OSM et accès privés non re
 ne peuvent pas être déduits. Ce mode n’est pas un calcul d’itinéraire accessible.
 
 **Tuiles.** Jusqu’à six tuiles proches, indépendamment du frustum étroit piéton,
-avec anticipation à 180 m dans la direction du regard et priorité maximale
+avec anticipation à 240 m dans la direction du regard et priorité maximale
 pour la tuile portant le piéton. Les budgets existants
 96 Mio / 48 Mio et caches de 24 tuiles sont conservés. Une tuile n’est déclarée
 marchable qu’après attachement de son modèle proche et de ses données IGN.
@@ -85,7 +85,7 @@ ou animation ; au repos, rendu à la demande. Pas de seconde boucle rAF. Perte d
 masquage, sortie du viewport, annulation de capture et changement de mode relâchent
 les commandes. Démontage : écouteurs, capture, observer, Canvas et index libérés.
 La cadence cible reste 24 images/s ; les déplacements utilisent le temps écoulé,
-avec un plafond de 2 s par pas de simulation sur un appareil extrêmement lent
+avec un plafond de 250 ms par dessin sur un appareil extrêmement lent
 pour éviter un bond prolongé. Les sous-pas conservent les collisions à faible cadence.
 En mode piéton : pixel ratio limité à 1, distance de rendu 2 km, brouillard local
 et zone d’ombre ±180 m ; détails architecturaux proches conservés.
@@ -853,3 +853,23 @@ Ce script facultatif utilise Playwright/Chromium comme le benchmark V5C et
 fonctionne aussi avec V5C (uniquement le cas sans activité). Le benchmark des
 cinq scénarios V5C désactive explicitement les agents s’ils sont présents, pour
 conserver sa référence. Les sorties restent dans `work/`, ignoré par Git.
+
+
+## V7 — rues détaillées et course
+
+Portes encadrées, appuis, volets, balcons sélectifs, cheminées et vitrines avec
+auvents enrichissent les façades proches. Bordures suivant le relief, marquages
+compatibles avec OSM, mobilier cartographié, éclairage public nocturne et végétation
+variée améliorent l’exploration. Le réseau réel de tram V6 reçoit lit de voie,
+rails, marqueurs d’arrêts et poteaux/fil de contact stylisés.
+
+**Maj gauche/droite : 6,5 m/s**, contre 1,8 m/s en marche, avec transition courte.
+Sur tactile : maintenir **Courir** avec une flèche. Le temps simulé est borné
+à 250 ms par dessin et les collisions restent vérifiées tous les 12 cm ; une
+tuile non prête bloque le mouvement. Les animations réduites conservent ces commandes.
+
+La provenance, les hypothèses procédurales, les limites, le rafraîchissement hors
+réseau et la comparaison avec V6 sont documentés dans
+[STREETS-PERFORMANCE.md](./STREETS-PERFORMANCE.md). Les détails sont préparés par
+le worker et regroupés, sans lumière dynamique ni boucle de rendu supplémentaire.
+Le complément statique OSM ne se charge qu’avec les tuiles proches.

@@ -1,12 +1,12 @@
 import { Box3, BufferAttribute, BufferGeometry, Group, InstancedBufferAttribute, InstancedMesh, MaterialLoader, Mesh, Sphere, Vector3 } from 'three';
 import type { MaterialJSON, MeshStandardMaterial, TypedArray } from 'three';
 import type { CityModel } from './city';
-import { atmosphereUniforms, waterMaterial, windowMaterial } from './atmosphere';
+import { atmosphereUniforms, streetLightMaterial, waterMaterial, windowMaterial } from './atmosphere';
 import type { AtmosphereUniforms } from './atmosphere';
 export interface WireAttribute { array: TypedArray; itemSize: number; normalized: boolean; instanced: boolean }
 interface WireGeometry { attributes: Record<string, WireAttribute>; index?: WireAttribute; sphere?: number[]; box?: number[] }
 interface WireMesh { geometry: number; material: number; matrix?: Float32Array; color?: Float32Array; count?: number; cast: boolean; receive: boolean; sphere?: number[] }
-interface WireMaterial { kind: 'standard' | 'water' | 'windows'; json: MaterialJSON; framed?: boolean }
+interface WireMaterial { kind: 'standard' | 'water' | 'windows' | 'streetlights'; json: MaterialJSON; framed?: boolean }
 export interface GeometryPacket { geometries: WireGeometry[]; materials: WireMaterial[]; meshes: WireMesh[]; windows: number; estimatedHeights: number; cpuMs: number }
 function sphereValues(sphere: Sphere | null): number[] | undefined { return sphere ? [...sphere.center.toArray(), sphere.radius] : undefined; }
 export function packGeometry(model: CityModel, cpuMs: number): { packet: GeometryPacket; transfer: ArrayBuffer[] } {
@@ -23,7 +23,7 @@ export function packGeometry(model: CityModel, cpuMs: number): { packet: Geometr
     }
     if (!materials.has(material)) {
       materials.set(material, packet.materials.length); const key = material.customProgramCacheKey();
-      packet.materials.push({ kind: key === 'nantes-water-v2' ? 'water' : key.startsWith('nantes-night-windows-v') ? 'windows' : 'standard', json: material.toJSON(), framed: key === 'nantes-night-windows-v2' });
+      packet.materials.push({ kind: key === 'nantes-streetlights-v1' ? 'streetlights' : key === 'nantes-water-v2' ? 'water' : key.startsWith('nantes-night-windows-v') ? 'windows' : 'standard', json: material.toJSON(), framed: key === 'nantes-night-windows-v2' });
     }
     const mesh: WireMesh = { geometry: geometries.get(geometry)!, material: materials.get(material)!, cast: object.castShadow, receive: object.receiveShadow };
     if (object instanceof InstancedMesh) {
@@ -49,7 +49,7 @@ export function unpackGeometry(packet: GeometryPacket, surfaceElevation: CityMod
     const standard = loader.parse(wire.json) as MeshStandardMaterial;
     if (wire.kind === 'standard') return standard;
     const scratch = new BufferGeometry();
-    const material = wire.kind === 'water' ? waterMaterial(atmosphere) : windowMaterial(scratch, [], atmosphere, wire.framed ? [] : undefined); scratch.dispose();
+    const material = wire.kind === 'streetlights' ? streetLightMaterial(atmosphere) : wire.kind === 'water' ? waterMaterial(atmosphere) : windowMaterial(scratch, [], atmosphere, wire.framed ? [] : undefined); scratch.dispose();
     material.copy(standard); standard.dispose(); return material;
   });
   const group = new Group();

@@ -26,7 +26,7 @@ export function pedestrianRoad(tags: Record<string, string>): boolean {
 }
 export function walkingTiles(manifest: CityManifest, position: Vector3, yaw: number): TileChoice[] {
   const owner = `${Math.floor(position.x / 500)}_${Math.floor(position.z / 500)}`;
-  const forward = new Vector3(-Math.sin(yaw) * 180, 0, -Math.cos(yaw) * 180).add(position);
+  const forward = new Vector3(-Math.sin(yaw) * 240, 0, -Math.cos(yaw) * 240).add(position);
   return manifest.tiles.map((tile) => {
     const [x0, z0, x1, z1] = tile.bounds as [number, number, number, number];
     const distance = (p: Vector3): number => Math.hypot(Math.max(x0 - p.x, 0, p.x - x1), Math.max(z0 - p.z, 0, p.z - z1));
@@ -132,6 +132,8 @@ export class Walker {
   readonly position = new Vector3();
   readonly keys = new Set<string>();
   private inputTime: number | undefined;
+  private speed = 1.8;
+  get currentSpeed(): number { return this.speed; }
   private readonly pendingSteps: { seconds: number; keys: Set<string> }[] = [];
   yaw = 0;
   pitch = 0;
@@ -148,10 +150,11 @@ export class Walker {
   }
   advance(now: number): boolean {
     this.recordInput(now);
-    const activeKeys = new Set(this.keys); let moved = false;
+    const activeKeys = new Set(this.keys); let moved = false, remaining = .25;
     for (const command of this.pendingSteps.splice(0)) {
       this.keys.clear(); command.keys.forEach((key) => this.keys.add(key));
-      moved = this.step(command.seconds) || moved;
+      const seconds = Math.min(command.seconds, remaining); remaining -= seconds;
+      moved = this.step(seconds) || moved;
     }
     this.keys.clear(); activeKeys.forEach((key) => this.keys.add(key)); return moved;
   }
@@ -161,7 +164,11 @@ export class Walker {
     let right = Number(this.keys.has('right')) - Number(this.keys.has('left'));
     const length = Math.hypot(forward, right); if (!length || seconds <= 0) return false;
     forward /= length; right /= length;
-    const distance = Math.min(seconds, 2) * (this.keys.has('fast') ? 3.6 : 1.8);
+    // Intégration analytique : même transition à toute cadence ; pauses longues ignorées.
+    const dt = Math.min(seconds, .25), target = this.keys.has('fast') ? 6.5 : 1.8;
+    const decay = Math.exp(-dt / .15);
+    const distance = target * dt + (this.speed - target) * .15 * (1 - decay);
+    this.speed = target + (this.speed - target) * decay;
     const count = Math.ceil(distance / .12), dx = (-Math.sin(this.yaw) * forward + Math.cos(this.yaw) * right) * distance / count, dz = (-Math.cos(this.yaw) * forward - Math.sin(this.yaw) * right) * distance / count;
     let moved = false; this.blocked = undefined;
     const attempt = (x: number, z: number): boolean => {
@@ -182,5 +189,5 @@ export class Walker {
     }
     return moved;
   }
-  stop(): void { this.keys.clear(); this.pendingSteps.length = 0; this.inputTime = undefined; }
+  stop(): void { this.keys.clear(); this.pendingSteps.length = 0; this.inputTime = undefined; this.speed = 1.8; }
 }

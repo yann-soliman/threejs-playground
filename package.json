@@ -15,6 +15,7 @@
     "test:watch": "vitest",
     "nantes:prepare": "python3 -B src/playgrounds/nantes-3d/scripts/prepare_city.py",
     "nantes:test-data": "python3 -B -m unittest discover -s src/playgrounds/nantes-3d/scripts -p \"test_*.py\"",
+    "nantes:prepare-mobility": "python3 -B src/playgrounds/nantes-3d/scripts/prepare_mobility.py",
     "nantes:prepare-legacy": "python3 -B src/playgrounds/nantes-3d/scripts/prepare.py",
     "nantes:prepare-terrain": "python3 -B src/playgrounds/nantes-3d/scripts/prepare_terrain.py"
   },

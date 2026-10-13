@@ -85,8 +85,9 @@ commandes ; sa durée totale de protocole (66,48 → 24,70 s) n’est pas une me
 La lecture solaire avance naturellement pendant les attentes.
 
 Les métriques suivantes proviennent du dernier dessin de chaque scénario.
-Les appels et triangles concernent ce dessin principal ; les ombres et le coût
-complet du GPU ne sont pas quantifiés par ces seuls compteurs.
+Les compteurs `renderer.info` peuvent inclure les passes d’ombres lorsqu’elles
+sont recalculées pendant ce dessin. Comparer des états semblables ; ces compteurs
+ne mesurent ni la durée ni le coût complet du GPU.
 
 | Scénario | Appels avant → après | Triangles avant → après | Buffers de cache avant → après | Mémoire JS principale avant → après |
 | --- | ---: | ---: | ---: | ---: |

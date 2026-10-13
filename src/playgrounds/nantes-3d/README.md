@@ -1,4 +1,4 @@
-# Nantes 3D — V5B
+# Nantes 3D — V6
 
 Diorama interactif de **toute la commune de Nantes**, dans l’architecture existante
 `mount(container): Cleanup`. Three.js, TypeScript strict, HTML/CSS natifs et fichiers
@@ -742,3 +742,114 @@ Le script utilise `/usr/bin/chromium` s’il existe, sinon le Chromium installé
 `python3 -m playwright install chromium`. Les options `--chromium` et `--url`
 permettent de choisir le navigateur et le préfixe de déploiement. Les captures
 et mesures JSON restent dans `work/v5c/`, ignoré par Git.
+
+
+## V6 — activité urbaine
+
+Le panneau **Activité urbaine** règle les passants et cyclistes : **Désactivée**,
+**Faible** (valeur initiale) et **Normale**. La case **Tramways** est indépendante
+et conserve le réglage de circulation automobile existant. L’activité est estimée,
+sans statistiques de fréquentation ni horaires de transport réels.
+
+**Passants et vélos.** Les tracés proviennent du même PBF OSM que les bâtiments.
+Les chemins, rues piétonnes et voies partagées sont préférés aux grandes chaussées.
+Sur les rues résidentielles/partagées, un décalage vers le bord est une estimation
+visuelle, séparée des tags factuels. Les chemins sont découpés contre les bâtiments,
+l’eau, les murs et les espaces explicitement interdits. `foot`, `bicycle`,
+`vehicle` et `access` sont lus avec priorité au mode concerné ; les interdictions,
+tunnels et niveaux non pris en charge sont exclus. Une rue piétonne/footway
+n’accueille des vélos que lorsque OSM les autorise explicitement. Les ponts de ces
+modes exigent un tablier déjà préparé en V4B. Le cycliste suit `oneway:bicycle`
+quand renseigné, sinon `oneway` ; une extrémité à sens unique arrête le vélo.
+
+Un modèle low-poly partagé par catégorie affiche tête, corps, bras et jambes,
+avec couleurs de vêtements, tailles, proportions, vitesses et phases déterministes.
+Les membres opposés oscillent dans le shader, sans squelette individuel.
+Les vélos comportent cadre, guidon, selle, deux roues et rayons tournants ; les
+jambes pédalent. Les trajectoires restent sur les polylignes préparées, avec
+orientation progressive ; les piétons et vélos bidirectionnels font demi-tour
+après une courte pause. Le relief est celui des triangles réellement affichés,
+avec l’offset de chaussée existant. La caméra du joueur conserve ses collisions.
+
+**Tramways.** 346 segments `railway=tram` et 117 nœuds d’arrêts ont été extraits.
+121 chaînes sont assemblées uniquement par identifiants de nœuds communs, au
+même niveau. Les courbes, voies distinctes, identifiants, attributs et directions
+explicitement renseignées restent présents ; aucun raccord par proximité.
+Les embranchements, différences de tablier et extrémités interrompent une chaîne.
+Les chaînes trop courtes pour une rame sont conservées dans les données mais
+ne portent pas de véhicule. Les rails visibles suivent également ces coordonnées.
+
+Chaque rame est constituée de trois sections qui échantillonnent séparément la
+voie, avec fenêtres, portes, bogies et couleurs vert/ivoire inspirées de Nantes.
+Il s’agit d’une interprétation graphique, sans logo ni exactitude de modèle
+revendiquée. Les arrêts OSM à moins de 12 m d’une voie déclenchent une pause de
+3 secondes ; cette proximité est une association estimée, pas un plan de service.
+À une extrémité, la rame s’arrête définitivement, sans retournement ni téléportation.
+Les ponts ferroviaires affichables utilisent une hauteur estimée à partir des
+extrémités IGN chargées ; ceux dont le support manque restent masqués.
+
+**Effectifs et heures.** Limites maximales, pas des effectifs garantis :
+
+| Mode | Ordinateur faible / normal | Mobile faible / normal |
+| --- | ---: | ---: |
+| Passants | 30 / 100 | 12 / 40 |
+| Cyclistes | 8 / 25 | 4 / 10 |
+| Tramways (case activée) | 4 | 2 |
+
+L’heure Europe/Paris de la simulation modifie progressivement les densités :
+activité accrue en journée/aux pointes, réduite la nuit. Les facteurs sont des
+estimations interpolées, sans reconstruction des modèles. Une réduction de
+population entraîne une disparition progressive ; une désactivation explicite
+arrête et masque immédiatement la catégorie concernée. Les animations réduites
+désactivent l’activité et ses contrôles, sans empêcher la navigation du joueur.
+
+**Tuiles et coût.** Les personnes ne sont visibles qu’au LOD proche, à proximité
+de la cible et dans le frustum ; aucune foule à l’échelle municipale. Les tramways
+restent visibles plus loin. Les chemins complets partagés par plusieurs tuiles
+conservent leur identifiant, ce qui évite les doublons ; une frontière non chargée
+bloque la progression et masque progressivement l’agent. La rame vérifie le support
+de ses trois sections avant d’avancer. Les anciennes réponses de tuiles ne sont
+pas attachées après remplacement/fermeture.
+
+Les assets de mobilité sont chargés à la demande, avec deux requêtes de tuiles
+au maximum (plus un éventuel chargement global du tram), seulement pour les tuiles
+proches actives. Les routes d’une tuile sont libérées à son retrait. Les modèles
+sont créés au premier besoin : un lot instancié par catégorie, un lot de rails,
+aucun casting d’ombre par agent et aucun renderer ou rAF supplémentaire.
+L’AnimationScheduler V5C reste commun aux agents, à la caméra, à l’eau, aux voitures
+et au soleil. Toutes les ressources et requêtes sont nettoyées à la fermeture.
+Le diagnostic ajoute effectifs, lots actifs estimés et buffers des agents estimés ;
+ses mises à jour restent conditionnées à l’ouverture du panneau.
+
+**Source et rafraîchissement.** Snapshot Geofabrik Pays de la Loire du
+8 octobre 2026 à 20:21:06 UTC, préparé le 13 octobre 2026, même SHA-256 que V3–V5C,
+projection métrique commune et ODbL. L’attribution OpenStreetMap reste visible.
+Les 306 fichiers de chemins et le réseau de tram totalisent environ 10,9 Mo,
+répartis en assets statiques ; aucun PBF temporaire n’est versionné.
+
+```sh
+npm run nantes:prepare-mobility -- --pbf work/v3/region.osm.pbf --prepared-at 2026-10-13
+npm run nantes:test-data
+```
+
+Le script refuse un PBF différent de celui du manifeste des bâtiments. Pour un
+nouveau snapshot, rafraîchir d’abord bâtiments/tuiles et relief suivant les étapes
+V3/V4B, puis préparer la mobilité avec le même PBF. `--prepared-at` permet de
+conserver la date de préparation pour une reproduction octet par octet ; sans
+cette option, la date du jour est inscrite. Aucun téléchargement implicite ni
+appel Overpass. Les restrictions conditionnelles, signaux, horaires et lacunes
+OSM ne sont pas déduits. Pas de simulation de foule, de priorité ou de physique
+cycliste ; des croisements/chevauchements ponctuels restent possibles.
+
+Le rapport [ACTIVITY-PERFORMANCE.md](./ACTIVITY-PERFORMANCE.md) présente les
+mesures V5C/V6, les validations en navigateur et les limites restantes.
+Pour reproduire la comparaison d’activité sur un build de production :
+
+```sh
+python3 src/playgrounds/nantes-3d/scripts/benchmark_activity.py --label mesure
+```
+
+Ce script facultatif utilise Playwright/Chromium comme le benchmark V5C et
+fonctionne aussi avec V5C (uniquement le cas sans activité). Le benchmark des
+cinq scénarios V5C désactive explicitement les agents s’ils sont présents, pour
+conserver sa référence. Les sorties restent dans `work/`, ignoré par Git.

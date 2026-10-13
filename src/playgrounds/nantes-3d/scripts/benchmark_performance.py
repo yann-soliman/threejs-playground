@@ -22,6 +22,9 @@ with sync_playwright() as p:
  page.on('pageerror',lambda e:errors.append(str(e)));page.on('console',lambda e:errors.append(e.text) if e.type=='error' and not e.location.get('url','').endswith('/favicon.ico') else None);page.on('response',lambda r:bad.append([r.status,r.url]) if r.status>=400 and not r.url.endswith('favicon.ico') else None)
  cdp=context.new_cdp_session(page);cdp.send('Network.enable');cdp.send('Network.setCacheDisabled',{'cacheDisabled':True})
  page.goto(args.url+'?profil=1#/playgrounds/nantes-3d');page.wait_for_function("!document.querySelector('[data-mode=pedestrian]').disabled")
+
+ if page.get_by_label('Passants et cyclistes',exact=True).count():
+  page.get_by_label('Passants et cyclistes',exact=True).select_option('off');page.get_by_label('Tramways',exact=True).uncheck()
  page.get_by_label('Circulation',exact=True).select_option('off');page.get_by_label('Animer l’eau',exact=True).uncheck();idle(page)
  gpu=page.evaluate('''()=>{const g=document.querySelector('.viewport > canvas').getContext('webgl2'),e=g.getExtension('WEBGL_debug_renderer_info');return {renderer:e?g.getParameter(e.UNMASKED_RENDERER_WEBGL):g.getParameter(g.RENDERER),timer:!!g.getExtension('EXT_disjoint_timer_query_webgl2')}}''');rows.append(snap(page,'A-overview',0))
  page.get_by_label('Date à Nantes',exact=True).fill('2026-06-21');page.locator('.nantes-hour input').evaluate('e=>{e.value=840;e.dispatchEvent(new Event("input",{bubbles:true}))}');idle(page)

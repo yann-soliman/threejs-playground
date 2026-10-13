@@ -27,6 +27,9 @@ import { PedestrianInput } from './pedestrian-input';
 import { Minimap } from './minimap';
 import { GeometryBuilder } from './geometry-client';
 import { PerformanceLog } from './performance';
+import { UrbanActivity } from './urban-activity';
+import type { UrbanDensity } from './mobility-paths';
+import { parisTime } from './time';
 import './style.css';
 
 type InteractiveTile = CityModel & TileResource & { data: CityData; lod: DetailLevel };
@@ -67,6 +70,7 @@ export function mount(container: HTMLElement): Cleanup {
       <div class="nantes-place" hidden><span><strong class="nantes-place-name"></strong><a class="nantes-place-link" target="_blank" rel="noopener noreferrer">Voir sur OpenStreetMap ↗</a></span><button type="button" data-action="walk-poi">Rejoindre le lieu</button><button type="button" data-action="clear-poi" aria-label="Masquer le repère du lieu" title="Masquer le repère">×</button></div>
       <span class="nantes-sr-only nantes-announcement" role="status"></span>
       <div class="nantes-caption"><span><strong>Nantes · Loire & Erdre</strong><br>Empreintes réelles, architecture interprétée</span><span class="nantes-stats" role="status"></span></div>
+      <fieldset class="nantes-activity"><legend>Activité urbaine</legend><label>Passants et cyclistes <select aria-label="Passants et cyclistes"><option value="off">Désactivée</option><option value="low" selected>Faible</option><option value="normal">Normale</option></select></label><label><input type="checkbox" class="nantes-trams" checked> Tramways</label><small role="status">Densités et déplacements estimés, sans horaires réels.</small></fieldset>
       <details class="nantes-diagnostics"><summary>Diagnostic du rendu</summary><output></output></details>
       <details class="nantes-data"><summary>À propos de cette maquette</summary><p class="nantes-provenance"></p><p>Les empreintes, rues, places, espaces verts et arbres proviennent d’OpenStreetMap. Les hauteurs et toitures utilisent les attributs disponibles ; les autres dimensions, fenêtres, matériaux et détails de façade sont estimés de manière déterministe. Le relief provient du MNT IGN RGE ALTI ; les formes de toit restent approximatives. La vue générale agrège la densité bâtie ; les empreintes réelles apparaissent en zoomant.</p><p><a href="https://www.openstreetmap.org/#map=16/47.2156/-1.5524" target="_blank" rel="noopener noreferrer">Voir Nantes sur OpenStreetMap ↗</a> · <a href="https://opendatacommons.org/licenses/odbl/1-0/" target="_blank" rel="noopener noreferrer">Licence des données ODbL ↗</a></p></details>
     </section>`;
@@ -94,6 +98,9 @@ export function mount(container: HTMLElement): Cleanup {
   const ambient = new HemisphereLight('#fff8e7', '#919987', 2.5);
   scene.add(ambient);
   const traffic = new Traffic(viewport.clientWidth < 600 ? 48 : 96);
+  const urban = new UrbanActivity(`${import.meta.env.BASE_URL}nantes/mobility/`, viewport.clientWidth < 600, () => { urbanChanged(); }, profile);
+  const urbanControl = container.querySelector<HTMLSelectElement>('.nantes-activity select')!;
+  const tramControl = container.querySelector<HTMLInputElement>('.nantes-trams')!;
   const trafficControl = container.querySelector<HTMLSelectElement>('.nantes-traffic select')!;
   const buildingCard = container.querySelector<HTMLElement>('.nantes-building')!;
   const selectionIndex = new BuildingSelection((feature) => {
@@ -109,7 +116,7 @@ export function mount(container: HTMLElement): Cleanup {
     }
     requestDraw();
   });
-  scene.add(traffic.group, selectionIndex.group);
+  scene.add(traffic.group, urban.group, selectionIndex.group);
   const atmosphere = atmosphereUniforms();
   const sun = new DirectionalLight('#fff1d5', 3);
   sun.position.set(-350, 700, 250);
@@ -191,7 +198,7 @@ export function mount(container: HTMLElement): Cleanup {
   const refreshDiagnostics = (): void => {
     if (diagnostics.open && loader) {
       const info = loader.info;
-      diagnostics.querySelector('output')!.textContent = `${mode === 'pedestrian' ? `Mode piéton · X ${walker!.position.x.toFixed(1)}, Z ${walker!.position.z.toFixed(1)} m · sol ${(walker!.position.y - EYE_HEIGHT).toFixed(2)} m NGF · ${world!.count} tuiles proches · collision ${walker!.blocked ? ({ loading: 'chargement', obstacle: 'obstacle', water: 'eau', access: 'accès interdit', slope: 'pente refusée' })[walker!.blocked] : 'prête'} · ` : 'Vue aérienne · '}${walker?.moving || entry || navigator.active || timeControls.playing || waterActive() || traffic.count > 0 ? `Rendu animé : ${movementFps.toFixed(1)} images/s` : 'Au repos : rendu à la demande'} · ${info.active} tuiles · ${info.pending} requêtes · LOD proche/moyen/lointain : ${info.lod.near}/${info.lod.medium}/${info.lod.far} · ${renderer.info.render.calls} appels de dessin · ${renderer.info.render.triangles.toLocaleString('fr-FR')} triangles · relief 20/50/100 m · buffers estimés : ${(info.bytes / 1048576).toFixed(1)} Mio (hors pilote GPU) · ${traffic.count} véhicules · ${traffic.drawCalls} appels circulation · eau ${waterActive() ? 'animée' : 'figée'}`;
+      diagnostics.querySelector('output')!.textContent = `${mode === 'pedestrian' ? `Mode piéton · X ${walker!.position.x.toFixed(1)}, Z ${walker!.position.z.toFixed(1)} m · sol ${(walker!.position.y - EYE_HEIGHT).toFixed(2)} m NGF · ${world!.count} tuiles proches · collision ${walker!.blocked ? ({ loading: 'chargement', obstacle: 'obstacle', water: 'eau', access: 'accès interdit', slope: 'pente refusée' })[walker!.blocked] : 'prête'} · ` : 'Vue aérienne · '}${walker?.moving || entry || navigator.active || timeControls.playing || waterActive() || traffic.count > 0 || urban.active ? `Rendu animé : ${movementFps.toFixed(1)} images/s` : 'Au repos : rendu à la demande'} · ${info.active} tuiles · ${info.pending} requêtes · LOD proche/moyen/lointain : ${info.lod.near}/${info.lod.medium}/${info.lod.far} · ${renderer.info.render.calls} appels de dessin · ${renderer.info.render.triangles.toLocaleString('fr-FR')} triangles · relief 20/50/100 m · buffers estimés : ${(info.bytes / 1048576).toFixed(1)} Mio (hors pilote GPU) · ${traffic.count} véhicules · ${traffic.drawCalls} appels circulation · ${urban.counts.pedestrian} passants · ${urban.counts.cyclist} cyclistes · ${urban.counts.tram} tramways · ${urban.drawCalls} lots d’activité estimés (hors ombres) · ${(urban.bytes / 1048576).toFixed(2)} Mio de buffers agents estimés · eau ${waterActive() ? 'animée' : 'figée'}`;
     }
   };
   const requestDraw = (): void => scheduler.invalidate();
@@ -212,7 +219,7 @@ export function mount(container: HTMLElement): Cleanup {
     profile.measure('render', mode, () => renderer.render(scene, camera));
     if (diagnostics.open) {
       const now = performance.now();
-      if ((walker?.moving || entry || navigator.active || timeControls.playing || waterActive() || traffic.count > 0) && lastDraw && now > lastDraw) movementFps = 1000 / (now - lastDraw);
+      if ((walker?.moving || entry || navigator.active || timeControls.playing || waterActive() || traffic.count > 0 || urban.active) && lastDraw && now > lastDraw) movementFps = 1000 / (now - lastDraw);
       lastDraw = now;
       refreshDiagnostics();
     }
@@ -226,12 +233,13 @@ export function mount(container: HTMLElement): Cleanup {
   };
   const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
   const waterActive = (): boolean => timeControls.waterPlaying && camera.position.distanceTo(controls.target) < 6500 && overview !== undefined;
-  const updateAnimation = (): void => scheduler.setContinuous(!!entry || !!walker?.moving || timeControls.playing || waterActive() || traffic.count > 0 && !motion.matches);
+  const updateAnimation = (): void => scheduler.setContinuous(!!entry || !!walker?.moving || timeControls.playing || waterActive() || (traffic.count > 0 || urban.active) && !motion.matches);
   const timeControls = new TimeControls(container, () => {
     lighting.select(timeControls.instant, true);
+    urbanChanged();
     updateAnimation(); requestDraw();
   });
-  timeControls.setReduced(motion.matches); trafficControl.disabled = motion.matches;
+  timeControls.setReduced(motion.matches); trafficControl.disabled = motion.matches; urbanControl.disabled = motion.matches; tramControl.disabled = motion.matches;
   lighting.select(timeControls.instant, true);
   const scheduler = new AnimationScheduler({
     now: () => performance.now(),
@@ -250,10 +258,11 @@ export function mount(container: HTMLElement): Cleanup {
         walkHelp.textContent = walker.blocked ? ({ loading: 'Chargement du terrain voisin… Position conservée.', slope: 'Pente ou dénivelé trop important : passage bloqué.', obstacle: 'Obstacle : contourner le bâtiment ou le mur.', water: 'Bord de l’eau : passage bloqué.', access: 'Accès piéton interdit ou surface non prise en charge.' })[walker.blocked] : walkingMessage;
       }
     }
-    if (timeControls.advance(seconds)) lighting.select(timeControls.instant);
+    if (timeControls.advance(seconds)) { lighting.select(timeControls.instant); urban.configure(urbanControl.value as UrbanDensity, tramControl.checked, motion.matches, parisTime(timeControls.instant).minute / 60); }
     if (waterActive()) atmosphere.time.value += seconds;
-    if (!motion.matches) traffic.update(seconds);
-  }, render, () => walker?.moving || entry || navigator.active || traffic.count || waterActive() ? 24 : 12);
+    if (!motion.matches) { traffic.update(seconds); urban.update(seconds); }
+    updateAnimation();
+  }, render, () => walker?.moving || entry || navigator.active || traffic.count || urban.active || waterActive() ? 24 : 12);
   const readPose = (): CameraPose => readCameraPose(camera, controls.target);
   const applyPose = (pose: CameraPose): void => {
     controls.target.copy(pose.target);
@@ -268,7 +277,7 @@ export function mount(container: HTMLElement): Cleanup {
     if (!walker) return;
     camera.position.copy(walker.position); camera.rotation.set(walker.pitch, walker.yaw, 0, 'YXZ');
     controls.target.copy(walker.position); controls.target.y -= EYE_HEIGHT;
-    camera.updateMatrixWorld(); requestDraw();
+    camera.updateMatrixWorld(); urban.select(camera, controls.target); requestDraw();
   };
   const resolveSpawn = (): void => {
     if (mode !== 'pedestrian' || !pendingSpawn || !world || !walker) return;
@@ -405,6 +414,12 @@ export function mount(container: HTMLElement): Cleanup {
     else return;
     event.preventDefault();
   };
+  const urbanChanged = (): void => {
+    urban.configure(urbanControl.value as UrbanDensity, tramControl.checked, motion.matches, parisTime(timeControls.instant).minute / 60);
+    urban.select(camera, controls.target);
+    container.querySelector('.nantes-activity small')!.textContent = motion.matches ? 'Animations réduites : activité urbaine désactivée.' : urban.status;
+    updateAnimation(); requestDraw();
+  };
   const trafficChanged = (): void => { traffic.select(camera, controls.target, trafficControl.value as TrafficDensity, motion.matches); updateAnimation(); requestDraw(); };
   const closeBuilding = (): void => selectionIndex.clear();
   const raycaster = new Raycaster();
@@ -424,12 +439,13 @@ export function mount(container: HTMLElement): Cleanup {
   const pointerMove = (event: PointerEvent): void => { if (press && Math.hypot(event.clientX - press.x, event.clientY - press.y) > 5) press = undefined; };
   viewport.addEventListener('pointerdown', pointerDown); viewport.addEventListener('pointerup', pointerUp); viewport.addEventListener('pointercancel', pointerCancel); viewport.addEventListener('pointermove', pointerMove);
   trafficControl.addEventListener('change', trafficChanged);
+  urbanControl.addEventListener('change', urbanChanged); tramControl.addEventListener('change', urbanChanged);
   buildingCard.querySelector('button')!.addEventListener('click', closeBuilding);
   container.addEventListener('click', click);
   picker.addEventListener('change', selectChange);
   viewport.addEventListener('keydown', keydown);
   controls.addEventListener('start', manualInteraction);
-  const cameraChanged = (): void => { fitCamera(); traffic.select(camera, controls.target, trafficControl.value as TrafficDensity, motion.matches); updateAnimation(); requestDraw(); scheduleTiles(); };
+  const cameraChanged = (): void => { fitCamera(); urban.select(camera, controls.target); traffic.select(camera, controls.target, trafficControl.value as TrafficDensity, motion.matches); updateAnimation(); requestDraw(); scheduleTiles(); };
   const diagnosticChanged = (): void => { lastDraw = 0; requestDraw(); };
   diagnostics.addEventListener('toggle', diagnosticChanged);
   controls.addEventListener('change', cameraChanged);
@@ -441,7 +457,7 @@ export function mount(container: HTMLElement): Cleanup {
   };
   const motionChanged = (): void => {
     if (motion.matches) navigator.cancel();
-    timeControls.setReduced(motion.matches); trafficControl.disabled = motion.matches; traffic.select(camera, controls.target, trafficControl.value as TrafficDensity, motion.matches); updateAnimation(); requestDraw();
+    timeControls.setReduced(motion.matches); trafficControl.disabled = motion.matches; urbanControl.disabled = motion.matches; tramControl.disabled = motion.matches; urbanChanged(); traffic.select(camera, controls.target, trafficControl.value as TrafficDensity, motion.matches); updateAnimation(); requestDraw();
   };
   document.addEventListener('visibilitychange', visibilityChanged);
   motion.addEventListener('change', motionChanged);
@@ -454,7 +470,7 @@ export function mount(container: HTMLElement): Cleanup {
   observer.observe(viewport);
   // Premier cadrage immédiat au montage ; toutes les actions suivantes sont animées.
   applyPose(aerialPose(aspect())); resize();
-  profile.publish(() => ({ mode, position: walker?.position.toArray(), yaw: walker?.yaw, tiles: loader?.info, calls: renderer.info.render.calls, triangles: renderer.info.render.triangles, geometries: renderer.info.memory.geometries, textures: renderer.info.memory.textures, programs: renderer.info.programs?.length, camera: camera.position.toArray(), target: controls.target.toArray() }));
+  profile.publish(() => ({ mode, position: walker?.position.toArray(), yaw: walker?.yaw, tiles: loader?.info, calls: renderer.info.render.calls, triangles: renderer.info.render.triangles, geometries: renderer.info.memory.geometries, textures: renderer.info.memory.textures, programs: renderer.info.programs?.length, agents: urban.counts, agentPositions: urban.positions, agentCalls: urban.drawCalls, agentBytes: urban.bytes, camera: camera.position.toArray(), target: controls.target.toArray() }));
   const request = new AbortController();
   const fetchData = async <T,>(url: string, signal: AbortSignal): Promise<T> => {
     const start = profile.enabled ? performance.now() : 0;
@@ -518,14 +534,14 @@ export function mount(container: HTMLElement): Cleanup {
           });
           return { ...model, bytes, data: tileData, lod: choice.lod };
         },
-        attach: (resource, tile) => { scene.add(resource.group); if (resource.lod === 'near') world?.setTile(tile.id, resource.data, resource.surfaceElevation); selectionIndex.setTile(tile.id, resource.data, resource.lod, resource.surfaceElevation); if (resource.lod !== 'far') traffic.setTile(tile.id, resource.data, resource.surfaceElevation, terrainOverview!.bridgeLevels); overview?.setTile(tile, true); lighting.invalidateShadows(); sceneDirty = true; },
-        detach: (resource, tile) => { scene.remove(resource.group); world?.removeTile(tile.id); selectionIndex.removeTile(tile.id); traffic.removeTile(tile.id); overview?.setTile(tile, false); lighting.invalidateShadows(); sceneDirty = true; },
+        attach: (resource, tile) => { scene.add(resource.group); if (resource.lod === 'near') world?.setTile(tile.id, resource.data, resource.surfaceElevation); selectionIndex.setTile(tile.id, resource.data, resource.lod, resource.surfaceElevation); urban.setTile(tile.id, resource.surfaceElevation, resource.lod); if (resource.lod !== 'far') traffic.setTile(tile.id, resource.data, resource.surfaceElevation, terrainOverview!.bridgeLevels); overview?.setTile(tile, true); lighting.invalidateShadows(); sceneDirty = true; },
+        detach: (resource, tile) => { scene.remove(resource.group); world?.removeTile(tile.id); selectionIndex.removeTile(tile.id); traffic.removeTile(tile.id); urban.removeTile(tile.id); overview?.setTile(tile, false); lighting.invalidateShadows(); sceneDirty = true; },
         changed: () => {
           if (disposed || !loader) return;
           const info = loader.info;
           status.hidden = info.pending === 0 && tileFailures === 0;
           status.textContent = tileFailures ? `${tileFailures} tuile(s) indisponible(s) ; la vue générale reste visible.` : destination ? 'Affinage du quartier sélectionné…' : 'Chargement des quartiers visibles…';
-          resolveSpawn(); selectionIndex.reconcile(); traffic.select(camera, controls.target, trafficControl.value as TrafficDensity, motion.matches); updateAnimation();
+          resolveSpawn(); selectionIndex.reconcile(); urbanChanged(); traffic.select(camera, controls.target, trafficControl.value as TrafficDensity, motion.matches); updateAnimation();
           refreshDiagnostics();
           if (sceneDirty) requestDraw();
         },
@@ -561,8 +577,8 @@ export function mount(container: HTMLElement): Cleanup {
     diagnostics.removeEventListener('toggle', diagnosticChanged);
     if (tileTimer !== undefined) window.clearTimeout(tileTimer);
     viewport.removeEventListener('pointerdown', pointerDown); viewport.removeEventListener('pointerup', pointerUp); viewport.removeEventListener('pointercancel', pointerCancel); viewport.removeEventListener('pointermove', pointerMove);
-    trafficControl.removeEventListener('change', trafficChanged); buildingCard.querySelector('button')!.removeEventListener('click', closeBuilding);
-    selectionIndex.dispose(); traffic.dispose();
+    trafficControl.removeEventListener('change', trafficChanged); urbanControl.removeEventListener('change', urbanChanged); tramControl.removeEventListener('change', urbanChanged); buildingCard.querySelector('button')!.removeEventListener('click', closeBuilding);
+    selectionIndex.dispose(); traffic.dispose(); urban.dispose();
     controls.dispose();
     loader?.dispose(); terrainStore?.dispose();
     overview?.dispose();

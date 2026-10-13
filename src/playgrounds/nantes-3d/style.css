@@ -125,3 +125,9 @@
   .nantes-viewport:has(.nantes-map.expanded) .nantes-walk-pad { display: none; }
 }
 .nantes-place button[data-action=walk-poi] { font-size: 12px; border: 1px solid #cbd6cb; white-space: nowrap; }
+
+.nantes-activity { display: flex; align-items: center; flex-wrap: wrap; gap: .75rem 1.25rem; border: 1px solid #dce2d9; border-radius: .75rem; padding: .75rem 1rem; margin: 1rem 0; }
+.nantes-activity legend { font-size: .85rem; font-weight: 600; color: #42574a; padding: 0 .35rem; }
+.nantes-activity label { display: flex; align-items: center; gap: .55rem; font-size: .85rem; }
+.nantes-activity select { font: inherit; padding: .4rem .6rem; border: 1px solid #cbd6ca; border-radius: .4rem; background: #fff; color: #35483d; }
+.nantes-activity small { flex-basis: 100%; color: #63746a; font-size: .75rem; }

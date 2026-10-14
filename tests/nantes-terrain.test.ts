@@ -68,7 +68,7 @@ describe('Relief réel : interpolation et géométrie', () => {
   it('place caméra et repère au-dessus de l’altitude du lieu', () => {
     const pose = { target: new Vector3(), distance: 500, polar: 1, azimuth: 0 };
     const poi = selectPointOfInterest('castle', (city as unknown as CityData).meta, pose, 1.5, () => 32.43)!;
-    expect(poi.pose.target.y).toBe(32.43); expect(poi.marker.y).toBeCloseTo(58.43);
+    expect(poi.pose.target.y).toBe(32.43); expect(poi.marker.y).toBeCloseTo(32.43 + poi.point.markerHeight);
   });
 });
 

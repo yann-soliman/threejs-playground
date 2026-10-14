@@ -873,3 +873,15 @@ réseau et la comparaison avec V6 sont documentés dans
 [STREETS-PERFORMANCE.md](./STREETS-PERFORMANCE.md). Les détails sont préparés par
 le worker et regroupés, sans lumière dynamique ni boucle de rendu supplémentaire.
 Le complément statique OSM ne se charge qu’avec les tuiles proches.
+
+## V8 — monuments nantais
+
+Le château, la cathédrale, la Tour LU, la grue Titan jaune et le Passage Pommeraye
+reçoivent des modèles procéduraux dédiés et trois niveaux de détail. Les POI
+présentent les sources et un bouton **Observer le monument**. Les objets OSM
+sont remplacés explicitement dans le rendu, tout en conservant leurs métadonnées
+et obstacles. Le complément reste préparé hors ligne et hébergé sur Pages.
+
+Voir [LANDMARKS.md](./LANDMARKS.md) pour les références, identifiants, hypothèses,
+relief et rafraîchissement ; [LANDMARKS-PERFORMANCE.md](./LANDMARKS-PERFORMANCE.md)
+pour les validations et mesures V7/V8.

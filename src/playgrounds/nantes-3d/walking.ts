@@ -1,3 +1,4 @@
+import { landmarkCollisionFeatures } from './landmarks';
 import { Vector3 } from 'three';
 import { inFootprint } from './selection';
 import { roadWidth } from './city';
@@ -42,7 +43,7 @@ export class WalkingWorld {
   get count(): number { return this.tiles.size; }
   setTile(id: string, data: CityData, sample: WalkTile['sample']): void {
     const bins = new Map<string, Feature[]>();
-    for (const feature of data.buildings) {
+    for (const feature of [...data.buildings, ...landmarkCollisionFeatures(data)]) {
       const points = feature.rings.flat(), xs = points.map((p) => p[0]), zs = points.map((p) => p[1]);
       for (let x = Math.floor((Math.min(...xs) - PLAYER_RADIUS) / 25); x <= Math.floor((Math.max(...xs) + PLAYER_RADIUS) / 25); x++) for (let z = Math.floor((Math.min(...zs) - PLAYER_RADIUS) / 25); z <= Math.floor((Math.max(...zs) + PLAYER_RADIUS) / 25); z++) {
         const key = `${x}_${z}`, entries = bins.get(key) ?? []; entries.push(feature); bins.set(key, entries);

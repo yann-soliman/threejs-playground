@@ -1,5 +1,6 @@
 import { BoxGeometry, Color, CylinderGeometry, IcosahedronGeometry, Group, InstancedMesh, MeshStandardMaterial, Object3D, PlaneGeometry } from 'three';
 import type { BufferGeometry } from 'three';
+import { landmarkForFeature } from './landmarks/registry';
 import { buildingStyle, seedOf, signedArea } from './buildings';
 import { streetLightMaterial, windowMaterial } from './atmosphere';
 import type { AtmosphereUniforms } from './atmosphere';
@@ -16,7 +17,7 @@ export interface StreetData {
 }
 interface Part { x: number; y: number; z: number; w: number; h: number; d: number; angle: number; color: string }
 export function decoratedBuilding(feature: Feature): boolean {
-  return !['industrial', 'warehouse', 'shed', 'garage', 'garages', 'roof', 'ruins', 'cathedral', 'church', 'construction', 'service'].includes(feature.tags.building ?? '') && !feature.tags.historic;
+  return !landmarkForFeature(feature) && !['industrial', 'warehouse', 'shed', 'garage', 'garages', 'roof', 'ruins', 'cathedral', 'church', 'construction', 'service'].includes(feature.tags.building ?? '') && !feature.tags.historic;
 }
 export function storefront(feature: Feature, businesses: StreetData['businesses'] = {}): 'osm' | 'estimated' | undefined {
   if (!decoratedBuilding(feature)) return undefined;

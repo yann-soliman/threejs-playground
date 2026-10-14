@@ -1,3 +1,6 @@
+import { landmarkView } from './pois';
+import { augmentLandmarkData, landmarkSurfaceSampler } from './landmarks';
+import { landmarks, landmarkForFeature, landmarkHeight, supportTiles } from './landmarks/registry';
 import {
   ACESFilmicToneMapping, BufferGeometry, Color, DirectionalLight, Fog, HemisphereLight, InstancedMesh, Mesh,
   PCFSoftShadowMap, PerspectiveCamera, Scene, Vector2, Vector3, Raycaster, WebGLRenderer,
@@ -68,7 +71,7 @@ export function mount(container: HTMLElement): Cleanup {
       <p class="controls-help" id="nantes-help">Glisser pour tourner · Molette pour zoomer · Clic droit ou deux doigts pour déplacer · Clavier : flèches, +, −, R pour réinitialiser et N pour le nord</p>
       <label class="nantes-traffic">Circulation <select aria-label="Circulation"><option value="off">Désactivée</option><option value="low">Faible</option><option value="normal" selected>Normale</option></select><small>Cliquer sur un bâtiment pour l’inspecter.</small></label>
       <div class="nantes-building" hidden aria-live="polite"><div><strong></strong><dl></dl><a target="_blank" rel="noopener noreferrer">Voir le bâtiment sur OpenStreetMap ↗</a></div><button type="button" aria-label="Fermer la fiche du bâtiment">×</button></div>
-      <div class="nantes-place" hidden><span><strong class="nantes-place-name"></strong><a class="nantes-place-link" target="_blank" rel="noopener noreferrer">Voir sur OpenStreetMap ↗</a></span><button type="button" data-action="walk-poi">Rejoindre le lieu</button><button type="button" data-action="clear-poi" aria-label="Masquer le repère du lieu" title="Masquer le repère">×</button></div>
+      <div class="nantes-place" hidden><span><strong class="nantes-place-name"></strong><small class="nantes-place-description" hidden></small><a class="nantes-place-reference" target="_blank" rel="noopener noreferrer" hidden>Source architecturale ↗</a><a class="nantes-place-link" target="_blank" rel="noopener noreferrer">Voir sur OpenStreetMap ↗</a></span><button type="button" data-action="observe-poi" hidden>Observer le monument</button><button type="button" data-action="walk-poi">Rejoindre le lieu</button><button type="button" data-action="clear-poi" aria-label="Masquer le repère du lieu" title="Masquer le repère">×</button></div>
       <span class="nantes-sr-only nantes-announcement" role="status"></span>
       <div class="nantes-caption"><span><strong>Nantes · Loire & Erdre</strong><br>Empreintes réelles, architecture interprétée</span><span class="nantes-stats" role="status"></span></div>
       <fieldset class="nantes-activity"><legend>Activité urbaine</legend><label>Passants et cyclistes <select aria-label="Passants et cyclistes"><option value="off">Désactivée</option><option value="low" selected>Faible</option><option value="normal">Normale</option></select></label><label><input type="checkbox" class="nantes-trams" checked> Tramways</label><small role="status">Densités et déplacements estimés, sans horaires réels.</small></fieldset>
@@ -108,9 +111,10 @@ export function mount(container: HTMLElement): Cleanup {
     buildingCard.hidden = !feature;
     if (feature) {
       const info = buildingInformation(feature);
-      buildingCard.querySelector('strong')!.textContent = info.title;
+      const monument = landmarkForFeature(feature);
+      buildingCard.querySelector('strong')!.textContent = monument?.name ?? info.title;
       const list = buildingCard.querySelector('dl')!; list.replaceChildren();
-      for (const [label, value] of [['Type OSM', info.type], ['Hauteur', info.height], ['Niveaux OSM', info.floors], ['Identifiant OSM', info.id]]) {
+      for (const [label, value] of [['Type OSM', feature.tags.building ?? feature.tags.man_made ?? info.type], ['Hauteur OSM / estimation', monument && !feature.tags.height && !feature.tags['building:levels'] ? 'Non renseignée' : info.height], ['Niveaux OSM', info.floors], ['Identifiant OSM', info.id], ...(monument ? [['Nom OSM', info.title], ['Hauteur du modèle', `${landmarkHeight(feature)} m · interprétation`], ['Monument', monument.description], ['Interprétation', 'Modèle stylisé ; détails et proportions secondaires estimés.']] : [])]) {
         const term = document.createElement('dt'), detail = document.createElement('dd'); term.textContent = label!; detail.textContent = value!; list.append(term, detail);
       }
       buildingCard.querySelector('a')!.href = info.url;
@@ -353,6 +357,12 @@ export function mount(container: HTMLElement): Cleanup {
     picker.value = next.point.id;
     container.querySelector<HTMLElement>('.nantes-place-name')!.textContent = next.point.name;
     container.querySelector<HTMLAnchorElement>('.nantes-place-link')!.href = next.url;
+    const monument = landmarks.find((item) => item.id === next.point.id);
+    const description = container.querySelector<HTMLElement>('.nantes-place-description')!, reference = container.querySelector<HTMLAnchorElement>('.nantes-place-reference')!;
+    description.hidden = reference.hidden = !monument;
+    container.querySelector<HTMLButtonElement>('[data-action=observe-poi]')!.hidden = !monument;
+    description.textContent = monument?.description ?? '';
+    reference.href = monument?.reference ?? '#';
     announcement.textContent = `Lieu sélectionné : ${next.point.name}`;
     place.hidden = false;
     activeView(id);
@@ -390,6 +400,11 @@ export function mount(container: HTMLElement): Cleanup {
     if (button?.disabled) return;
     if (button?.dataset.action === 'inspect' && mode === 'pedestrian' && !entry && !pendingSpawn) { pedestrianInput?.release(); raycaster.setFromCamera(new Vector2(0, 0), camera); selectionIndex.pick(raycaster.ray); }
     if (button?.dataset.mode) setMode(button.dataset.mode as 'aerial' | 'pedestrian');
+    if (button?.dataset.action === 'observe-poi' && selection && manifest) {
+      if (mode === 'pedestrian') setMode('aerial');
+      const view = landmarkView(selection.point.id, manifest.meta, readPose(), aspect(), elevationAt);
+      if (view) moveTo(view.pose);
+    }
     if (button?.dataset.action === 'walk-poi' && selection) travelTo(selection.pose.target);
     if (button?.dataset.view) setView(button.dataset.view);
     if (button?.dataset.action === 'reset') setView('aerial');
@@ -510,12 +525,13 @@ export function mount(container: HTMLElement): Cleanup {
       terrainStore = new TerrainStore((url, signal) => fetchData(base + url, signal));
       loader = new TileLoader({
         fetch: async (choice, signal) => {
-          const [city, terrain, streets] = await Promise.all([
+          const [city, terrain, streets, landmarkSupport] = await Promise.all([
             fetchData<CityData>(base + choice.tile.urls[choice.lod], signal),
             terrainStore!.load(choice.tile.id, terrainFiles.get(choice.tile.id)!, signal),
             choice.lod === 'near' ? fetchData<import('./street-details').StreetData>(`${base}streets/tiles/${choice.tile.id}.json`, signal) : Promise.resolve(undefined),
+            supportTiles.has(choice.tile.id) ? fetchData<import('./landmarks/registry').LandmarkSupport>(`${base}landmarks/${choice.tile.id}.json`, signal) : Promise.resolve(undefined),
           ]);
-          return { ...city, terrain, streets };
+          return augmentLandmarkData({ ...city, terrain, streets, landmarks: landmarkSupport }, choice.tile.id);
         },
         generate: async (tileData, choice, signal) => {
           // Laisser le navigateur traiter les interactions entre deux lots de géométrie.
@@ -536,7 +552,7 @@ export function mount(container: HTMLElement): Cleanup {
           });
           return { ...model, bytes, data: tileData, lod: choice.lod };
         },
-        attach: (resource, tile) => { scene.add(resource.group); if (resource.lod === 'near') world?.setTile(tile.id, resource.data, resource.surfaceElevation); selectionIndex.setTile(tile.id, resource.data, resource.lod, resource.surfaceElevation); urban.setTile(tile.id, resource.surfaceElevation, resource.lod); if (resource.lod !== 'far') traffic.setTile(tile.id, resource.data, resource.surfaceElevation, terrainOverview!.bridgeLevels); overview?.setTile(tile, true); lighting.invalidateShadows(); sceneDirty = true; },
+        attach: (resource, tile) => { scene.add(resource.group); if (resource.lod === 'near') world?.setTile(tile.id, resource.data, resource.surfaceElevation); selectionIndex.setTile(tile.id, resource.data, resource.lod, resource.surfaceElevation); urban.setTile(tile.id, landmarkSurfaceSampler(resource.data, resource.surfaceElevation), resource.lod); if (resource.lod !== 'far') traffic.setTile(tile.id, resource.data, resource.surfaceElevation, terrainOverview!.bridgeLevels); overview?.setTile(tile, true); lighting.invalidateShadows(); sceneDirty = true; },
         detach: (resource, tile) => { scene.remove(resource.group); world?.removeTile(tile.id); selectionIndex.removeTile(tile.id); traffic.removeTile(tile.id); urban.removeTile(tile.id); overview?.setTile(tile, false); lighting.invalidateShadows(); sceneDirty = true; },
         changed: () => {
           if (disposed || !loader) return;

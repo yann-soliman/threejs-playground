@@ -3,6 +3,8 @@ import {
   Group, IcosahedronGeometry, InstancedMesh, Mesh, MeshStandardMaterial, Object3D,
   PlaneGeometry, ShapeGeometry,
 } from 'three';
+import { createLandmarks, landmarkCollisionFeatures } from './landmarks';
+import { landmarkForFeature } from './landmarks/registry';
 import { createStreetDetails, storefront } from './street-details';
 import { streetRoadGeometry } from './street-roads';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
@@ -158,6 +160,7 @@ export function createCity(data: CityData, options: { lod?: DetailLevel; ground?
   const windowTransforms: { x: number; y: number; z: number; angle: number; w: number; h: number; light: [number, number, number] }[] = [];
   let estimatedHeights = 0;
   for (const feature of data.buildings) {
+    if (landmarkForFeature(feature)) continue;
     const style = buildingStyle(feature);
     if (lod === 'far') { style.roofHeight = 0; style.roofShape = 'flat'; }
     if (style.heightSource === 'estimated') estimatedHeights++;
@@ -231,10 +234,13 @@ export function createCity(data: CityData, options: { lod?: DetailLevel; ground?
   });
   windows.computeBoundingSphere();
 
-  const details = createStreetDetails(data, lod, sample, options.terrain?.bases ?? {}, atmosphere);
+  const monuments = createLandmarks(data, lod, measured, options.terrain?.bases ?? {}, atmosphere);
+  if (monuments.children.length) group.add(...monuments.children);
+  const detailedData = { ...data, buildings: [...data.buildings, ...landmarkCollisionFeatures(data)] };
+  const details = createStreetDetails(detailedData, lod, sample, options.terrain?.bases ?? {}, atmosphere);
   if (details.children.length) group.add(...details.children);
   if (lod === 'near') {
-    const streetGeometry = streetRoadGeometry(data, sample);
+    const streetGeometry = streetRoadGeometry(detailedData, sample);
     if (streetGeometry.getAttribute('position').count) add(streetGeometry, material('#ffffff', true), false);
     else streetGeometry.dispose();
   }
@@ -258,7 +264,7 @@ export function createCity(data: CityData, options: { lod?: DetailLevel; ground?
   });
   trunks.computeBoundingSphere(); foliage.computeBoundingSphere();
   let disposed = false;
-  return { surfaceElevation: sample, group, windows: windowTransforms.length, estimatedHeights, dispose: () => {
+  return { surfaceElevation: sample, group, windows: windowTransforms.length + Number(monuments.userData.windows ?? 0), estimatedHeights, dispose: () => {
     if (disposed) return;
     disposed = true;
     group.traverse((object) => { if (object instanceof Mesh) { geometries.add(object.geometry); materials.add(object.material as MeshStandardMaterial); } if (object instanceof InstancedMesh) object.dispose(); });

@@ -18,7 +18,8 @@
     "nantes:prepare-mobility": "python3 -B src/playgrounds/nantes-3d/scripts/prepare_mobility.py",
     "nantes:prepare-legacy": "python3 -B src/playgrounds/nantes-3d/scripts/prepare.py",
     "nantes:prepare-terrain": "python3 -B src/playgrounds/nantes-3d/scripts/prepare_terrain.py",
-    "nantes:prepare-streets": "python3 -B src/playgrounds/nantes-3d/scripts/prepare_streets.py"
+    "nantes:prepare-streets": "python3 -B src/playgrounds/nantes-3d/scripts/prepare_streets.py",
+    "nantes:prepare-landmarks": "python3 -B src/playgrounds/nantes-3d/scripts/prepare_landmarks.py"
   },
   "dependencies": {
     "three": "^0.186.1"

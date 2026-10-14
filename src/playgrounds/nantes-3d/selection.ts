@@ -1,7 +1,10 @@
-import { Box3, Color, Group, Mesh, MeshBasicMaterial, Ray, Vector3 } from 'three';
+import { Box3, BufferGeometry, Color, Float32BufferAttribute, Group, LineBasicMaterial, LineSegments, Mesh, MeshBasicMaterial, Ray, Vector3 } from 'three';
 import { buildingBody, buildingRoof, buildingStyle, metres } from './buildings';
 import type { BuildingStyle } from './buildings';
 import type { CityData, Feature, Point } from './types';
+import { landmarkPrisms } from './landmarks';
+import { landmarkForFeature } from './landmarks/registry';
+import type { Material } from 'three';
 import type { DetailLevel } from './city';
 
 export function containsPoint(ring: Point[], x: number, z: number): boolean {
@@ -25,7 +28,7 @@ export function buildingInformation(feature: Feature): { title: string; type: st
     floors: feature.tags['building:levels'] || 'Non renseigné', id: match ? `${match[1]}/${match[2]}` : feature.id,
     url: match ? `https://www.openstreetmap.org/${match[1]}/${match[2]}` : 'https://www.openstreetmap.org/copyright' };
 }
-interface PickBuilding { feature: Feature; base: number; style: BuildingStyle; box: Box3; tile: string }
+interface PickBuilding { feature: Feature; footprint: Feature; base: number; style: BuildingStyle; box: Box3; tile: string; prisms?: { rings: Point[][]; bottom: number; top: number; base: number }[] }
 interface PickTile { bins: Map<string, PickBuilding[]>; buildings: Map<string, PickBuilding> }
 export class BuildingSelection {
   readonly group = new Group();
@@ -36,11 +39,18 @@ export class BuildingSelection {
     if (lod === 'far') { this.removeTile(id); return; }
     const bins = new Map<string, PickBuilding[]>(), buildings = new Map<string, PickBuilding>();
     for (const feature of data.buildings) {
-      const style = buildingStyle(feature), base = data.terrain?.bases[feature.id]?.[1] ?? Math.max(...feature.rings[0]!.map(([x, z]) => sample(x, z)));
-      const box = new Box3(); for (const ring of feature.rings) for (const [x, z] of ring) box.expandByPoint(new Vector3(x, base, z)); box.max.y = base + style.height + .16;
-      const building = { feature, style, base, box, tile: id }; buildings.set(feature.id, building);
-      for (let x = Math.floor(box.min.x / 50); x <= Math.floor(box.max.x / 50); x++) for (let z = Math.floor(box.min.z / 50); z <= Math.floor(box.max.z / 50); z++) {
-        const key = `${x}_${z}`, entries = bins.get(key) ?? []; entries.push(building); bins.set(key, entries);
+      const originalStyle = buildingStyle(feature), foundation = data.terrain?.bases[feature.id]?.[1] ?? Math.max(...feature.rings[0]!.map(([x,z])=>sample(x,z)));
+      const monument = landmarkForFeature(feature);
+      const prisms = monument ? landmarkPrisms(feature) : [{ rings: feature.rings, bottom: originalStyle.base, top: originalStyle.height }];
+      const absolutePrisms = prisms.map(p=>({...p,base:p.ground?sample(...p.ground):foundation}));
+      for (const prism of absolutePrisms) {
+        const base = prism.base;
+        const footprint = { ...feature, rings: prism.rings }, style = monument ? { ...originalStyle, base: prism.bottom, height: prism.top, roofHeight: 0 } : originalStyle;
+        const box = new Box3(); for (const ring of prism.rings) for (const [x,z] of ring) box.expandByPoint(new Vector3(x,base+prism.bottom,z)); box.max.y = base + prism.top + .16;
+        const building = { feature, footprint, style, base, box, tile: id, prisms: monument ? absolutePrisms : undefined }; buildings.set(feature.id,building);
+        for (let x = Math.floor(box.min.x/50); x <= Math.floor(box.max.x/50); x++) for (let z = Math.floor(box.min.z/50); z <= Math.floor(box.max.z/50); z++) {
+          const key = `${x}_${z}`, entries = bins.get(key) ?? []; entries.push(building); bins.set(key,entries);
+        }
       }
     }
     this.tiles.set(id, { bins, buildings });
@@ -68,9 +78,9 @@ export class BuildingSelection {
       const top = building.box.max.y;
       if (Math.abs(ray.direction.y) > 1e-8) {
         const roofDistance = (top - ray.origin.y) / ray.direction.y, roof = ray.at(roofDistance, new Vector3());
-        if (roofDistance >= 0 && roofDistance < nearest && inFootprint(building.feature, roof.x, roof.z)) { nearest = roofDistance; selected = building; }
+        if (roofDistance >= 0 && roofDistance < nearest && inFootprint(building.footprint, roof.x, roof.z)) { nearest = roofDistance; selected = building; }
       }
-      for (const ring of building.feature.rings) for (let i = 0; i < ring.length; i++) {
+      for (const ring of building.footprint.rings) for (let i = 0; i < ring.length; i++) {
         const p = ring[i]!, q = ring[(i + 1) % ring.length]!, dx = q[0] - p[0], dz = q[1] - p[1];
         const det = ray.direction.x * dz - ray.direction.z * dx; if (Math.abs(det) < 1e-8) continue;
         const px = p[0] - ray.origin.x, pz = p[1] - ray.origin.z;
@@ -83,7 +93,15 @@ export class BuildingSelection {
   }
   private show(building?: PickBuilding): void {
     this.releaseHighlight(); this.selected = building;
-    if (building) {
+    if (building && landmarkForFeature(building.feature)) {
+      const values: number[] = [];
+      for (const prism of building.prisms ?? []) for (const ring of prism.rings) for (let i=0;i<ring.length;i++) {
+        const a=ring[i]!,b=ring[(i+1)%ring.length]!,bottom=prism.base+prism.bottom+.2,top=prism.base+prism.top+.2;
+        values.push(a[0],bottom,a[1],b[0],bottom,b[1],a[0],top,a[1],b[0],top,b[1],a[0],bottom,a[1],a[0],top,a[1]);
+      }
+      const geometry=new BufferGeometry();geometry.setAttribute('position',new Float32BufferAttribute(values,3));
+      const highlight=new LineSegments(geometry,new LineBasicMaterial({color:'#edb557',transparent:true,opacity:.8}));highlight.renderOrder=3;this.group.add(highlight);
+    } else if (building) {
       const material = new MeshBasicMaterial({ color: '#d79f4b', transparent: true, opacity: .23, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
       const style = { ...building.style, facade: new Color('#ffffff'), roof: new Color('#ffffff') };
       for (const geometry of [buildingBody(building.feature, style), buildingRoof(building.feature, style)]) {
@@ -94,8 +112,8 @@ export class BuildingSelection {
   }
   clear(): void { this.show(); }
   private releaseHighlight(): void {
-    const materials = new Set<MeshBasicMaterial>();
-    for (const child of this.group.children) { const mesh = child as Mesh; mesh.geometry.dispose(); materials.add(mesh.material as MeshBasicMaterial); }
+    const materials = new Set<Material>();
+    for (const child of this.group.children) { const mesh = child as Mesh; mesh.geometry.dispose(); materials.add(mesh.material as Material); }
     materials.forEach((material) => material.dispose()); this.group.clear();
   }
   dispose(): void { this.releaseHighlight(); this.tiles.clear(); this.selected = undefined; }

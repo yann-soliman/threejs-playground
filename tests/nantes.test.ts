@@ -70,7 +70,7 @@ describe('Géographie et génération Nantes', () => {
   });
   it('assemble la ville avec un nombre borné de lots et libère ses ressources', () => {
     const model = createCity(data);
-    expect(model.group.children.length).toBeLessThan(20);
+    expect(model.group.children.length).toBeLessThanOrEqual(24);
     expect(model.windows).toBeGreaterThan(10000);
     expect(model.estimatedHeights).toBeGreaterThan(0);
     model.dispose();

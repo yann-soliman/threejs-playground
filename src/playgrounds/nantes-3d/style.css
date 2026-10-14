@@ -133,3 +133,11 @@
 .nantes-activity small { flex-basis: 100%; color: #63746a; font-size: .75rem; }
 
 .nantes-walk-pad [data-walk="fast"] { grid-column: 1 / -1; width: auto; font-size: .8rem; }
+
+.nantes-place-description { display: block; max-width: 62ch; margin: .4rem 0; line-height: 1.5; }
+.nantes-place-description[hidden], .nantes-place-reference[hidden] { display: none; }
+.nantes-place button[data-action=observe-poi] { font-size: 12px; border: 1px solid #cbd6cb; white-space: nowrap; }
+@media (max-width: 600px) {
+  .nantes-place { flex-wrap: wrap; }
+  .nantes-place > span { flex-basis: 100%; }
+}
